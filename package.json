@@ -1,0 +1,14 @@
+{
+  "name": "cricsense-ai",
+  "version": "2.0.0",
+  "private": true,
+  "description": "India's #1 Cricket Intelligence Platform",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve . -p 3000",
+    "start": "npx serve ."
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0"
+  }
+}
