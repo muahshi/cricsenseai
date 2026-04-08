@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet"/>
-<!-- React + Babel for no-build JSX -->
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -34,9 +33,6 @@ input,textarea{font-family:inherit;outline:none;border:none}
 @keyframes fade-in{from{opacity:0}to{opacity:1}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-@keyframes glow-pulse{0%,100%{box-shadow:0 0 10px rgba(0,229,255,.3)}50%{box-shadow:0 0 30px rgba(0,229,255,.6)}}
-@keyframes bar-fill{from{width:0}to{width:var(--w)}}
 .anim-slide{animation:slide-in .4s ease both}
 .anim-fade{animation:fade-in .5s ease both}
 .anim-float{animation:float 3s ease-in-out infinite}
@@ -46,16 +42,7 @@ input,textarea{font-family:inherit;outline:none;border:none}
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const {useState,useEffect,useRef,useCallback,useMemo}=React;
-
-// ══════════════════════════════════════════════════
-// CONFIG — Replace with your actual API keys
-// ══════════════════════════════════════════════════
-const CFG={
-  CRICKET_KEY: "",   // https://cricapi.com (100 free req/day)
-  GROQ_KEY:    "",   // https://console.groq.com (free)
-  ODDS_KEY:    "",   // https://the-odds-api.com (optional)
-};
+const {useState,useEffect,useCallback}=React;
 
 // ══════════════════════════════════════════════════
 // COLORS
@@ -69,225 +56,123 @@ const C={
 };
 
 // ══════════════════════════════════════════════════
-// DEMO DATA
+// API CALLS — All go to /api/ (backend handles keys)
 // ══════════════════════════════════════════════════
-const DEMOS=[
-  {id:"d1",name:"Lahore Qalandars vs Karachi Kings",matchType:"T20",status:"live",
-   venue:"Gaddafi Stadium, Lahore",series:"Pakistan Super League 2025",
-   teamInfo:[{name:"Lahore Qalandars"},{name:"Karachi Kings"}],
-   score:[{r:112,w:3,o:13.4,inning:"LQ Inning 1"}]},
-  {id:"d2",name:"India vs Australia",matchType:"ODI",status:"live",
-   venue:"Wankhede Stadium, Mumbai",series:"India vs Australia 2025",
-   teamInfo:[{name:"India"},{name:"Australia"}],
-   score:[{r:203,w:4,o:38.2,inning:"India Inning 1"}]},
-  {id:"d3",name:"Chennai Super Kings vs Mumbai Indians",matchType:"T20",status:"upcoming",
-   venue:"MA Chidambaram Stadium",series:"IPL 2025",
-   teamInfo:[{name:"Chennai Super Kings"},{name:"Mumbai Indians"}],score:[]},
-  {id:"d4",name:"Pakistan vs England",matchType:"Test",status:"live",
-   venue:"National Stadium, Karachi",series:"Pakistan vs England 2025",
-   teamInfo:[{name:"Pakistan"},{name:"England"}],
-   score:[{r:287,w:6,o:89.2,inning:"Pakistan Inning 1"}]},
-];
+async function apiGet(path){
+  const r=await fetch(path);
+  if(!r.ok) throw new Error(`API error ${r.status}`);
+  return r.json();
+}
+async function apiPost(path,body){
+  const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error(`API error ${r.status}`);
+  return r.json();
+}
+
+async function fetchMatches(){
+  try{ const d=await apiGet("/api/predictions"); return d.data||[]; }
+  catch{ return []; }
+}
+async function fetchAI(matchId,tab,message){
+  try{
+    const d=await apiPost("/api/ai",{matchId,tab,message});
+    return d.result||"AI response unavailable.";
+  }catch{ return "⚠️ AI engine busy hai. Thodi der baad try karo."; }
+}
 
 // ══════════════════════════════════════════════════
 // UTILS
 // ══════════════════════════════════════════════════
-const ABBR={
-  "Lahore Qalandars":"LQ","Karachi Kings":"KK","India":"IND","Australia":"AUS",
-  "Chennai Super Kings":"CSK","Mumbai Indians":"MI","Kolkata Knight Riders":"KKR",
-  "Royal Challengers Bangalore":"RCB","Sunrisers Hyderabad":"SRH","Delhi Capitals":"DC",
-  "Punjab Kings":"PBKS","Rajasthan Royals":"RR","Pakistan":"PAK","England":"ENG",
-  "South Africa":"SA","New Zealand":"NZ","Sri Lanka":"SL","Bangladesh":"BAN",
-  "West Indies":"WI","Zimbabwe":"ZIM","Afghanistan":"AFG",
-};
-const EMOJI={
-  "India":"🇮🇳","Australia":"🇦🇺","Pakistan":"🇵🇰","England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","South Africa":"🇿🇦",
-  "New Zealand":"🇳🇿","Sri Lanka":"🇱🇰","Bangladesh":"🇧🇩","West Indies":"🏝️",
-  "Mumbai Indians":"💙","Chennai Super Kings":"💛","Royal Challengers Bangalore":"❤️",
-  "Kolkata Knight Riders":"💜","Lahore Qalandars":"🟢","Karachi Kings":"🔵",
-};
+const ABBR={"Lahore Qalandars":"LQ","Karachi Kings":"KK","India":"IND","Australia":"AUS","Chennai Super Kings":"CSK","Mumbai Indians":"MI","Kolkata Knight Riders":"KKR","Royal Challengers Bangalore":"RCB","Sunrisers Hyderabad":"SRH","Delhi Capitals":"DC","Punjab Kings":"PBKS","Rajasthan Royals":"RR","Pakistan":"PAK","England":"ENG","South Africa":"SA","New Zealand":"NZ","Sri Lanka":"SL","Bangladesh":"BAN","West Indies":"WI","Afghanistan":"AFG"};
+const EMOJI={"India":"🇮🇳","Australia":"🇦🇺","Pakistan":"🇵🇰","England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","South Africa":"🇿🇦","New Zealand":"🇳🇿","Sri Lanka":"🇱🇰","Bangladesh":"🇧🇩","West Indies":"🏝️","Mumbai Indians":"💙","Chennai Super Kings":"💛","Royal Challengers Bangalore":"❤️","Kolkata Knight Riders":"💜","Lahore Qalandars":"🟢","Karachi Kings":"🔵"};
 function abbr(n=""){ return ABBR[n]||(n.split(" ").length>=2?(n.split(" ")[0][0]+n.split(" ").slice(-1)[0][0]).toUpperCase():n.slice(0,3).toUpperCase()); }
 function emoji(n){ return EMOJI[n]||"🏏"; }
-function teams(m){ const p=m.name?.split(" vs ")||[]; return {t1:m.teamInfo?.[0]?.name||p[0]||"Team A",t2:m.teamInfo?.[1]?.name||p[1]||"Team B"}; }
+function teams(m){ const p=m.name?.split(" vs ")||[]; return{t1:m.teamInfo?.[0]?.name||p[0]||"Team A",t2:m.teamInfo?.[1]?.name||p[1]||"Team B"}; }
 function fmtScore(s){ if(!s?.length)return null; return s.map(x=>`${x.r}/${x.w} (${x.o} ov)`).join(" | "); }
 function isLive(m){ const s=m.status?.toLowerCase()||""; return s==="live"||s==="1"||s.includes("progress"); }
-function winProb(m){
-  const{t1,t2}=teams(m); const s=m.score?.[0];
-  if(!s)return{t1:50,t2:50,t1n:t1,t2n:t2};
-  const tot=m.matchType?.toUpperCase()==="T20"?20:m.matchType?.toUpperCase()==="TEST"?450:50;
-  const rr=s.o>0?s.r/s.o:0; const rem=tot-s.o; const wl=10-s.w;
-  const proj=s.r+(rr*rem*(wl/10)); const par=m.matchType?.toUpperCase()==="T20"?165:m.matchType?.toUpperCase()==="TEST"?350:280;
-  let p=50+((proj-par)/par)*30; p=Math.min(85,Math.max(15,p));
-  return{t1:Math.round(p),t2:Math.round(100-p),t1n:t1,t2n:t2};
-}
 function p2odds(p){ if(p<=0||p>=100)return"N/A"; return(100/p).toFixed(2); }
-
-// ══════════════════════════════════════════════════
-// AI ENGINE
-// ══════════════════════════════════════════════════
-const MODELS=["llama-3.3-70b-versatile","llama3-70b-8192","mixtral-8x7b-32768"];
-async function groq(prompt,model=MODELS[0]){
-  if(!CFG.GROQ_KEY)throw new Error("no key");
-  const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{
-    method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${CFG.GROQ_KEY}`},
-    body:JSON.stringify({model,max_tokens:600,temperature:.7,messages:[{role:"user",content:prompt}]})
-  });
-  if(!r.ok)throw new Error(r.status);
-  const d=await r.json(); return d.choices?.[0]?.message?.content||"";
-}
-async function ai(prompt){
-  for(const m of MODELS){try{return await groq(prompt,m);}catch{}}
-  const fb=["📊 Current match dynamics suggest batting side has momentum. Run rate above par with 7 wickets in hand — strong position. Watch for bowling change in next over.",
-    "🎯 Pressure building on batting side! Dot ball percentage in last 2 overs: 45%. Wicket probability high in next 3 deliveries. Bowling team in control.",
-    "⚡ Momentum shift! Partnership of 67 runs has stabilized innings. Projected total looks competitive. Market should adjust odds in next over.",
-    "🔮 AI Analysis: Based on current scoring patterns, par score projection is trending above initial estimates. Both teams have realistic paths to victory."];
-  return fb[Math.floor(Math.random()*fb.length)];
-}
-
-// ══════════════════════════════════════════════════
-// FETCH MATCHES
-// ══════════════════════════════════════════════════
-async function fetchMatches(){
-  if(!CFG.CRICKET_KEY)return DEMOS;
-  try{
-    const r=await fetch(`https://api.cricapi.com/v1/currentMatches?apikey=${CFG.CRICKET_KEY}&offset=0`);
-    const d=await r.json();
-    if(d.status==="success"&&d.data?.length>0)return d.data;
-  }catch{}
-  return DEMOS;
-}
 
 // ══════════════════════════════════════════════════
 // COMPONENTS
 // ══════════════════════════════════════════════════
 
-// ── Onboarding ──────────────────────────────────
 function Onboarding({onDone}){
   const[step,setStep]=useState(0);
   const slides=[
-    {icon:"🏏",title:"CricSense AI",sub:"India's #1 Cricket Intelligence",
-     desc:"Real-time AI predictions, live match analysis, and smart signals — all in one place.",col:C.accent},
-    {icon:"⚡",title:"Live AI Analysis",sub:"Ball-by-ball Intelligence",
-     desc:"7 AI tabs: Ball predictions, Wicket alerts, Score forecasts, Market traps, Momentum shifts, Player stats & What If scenarios.",col:C.accent2},
-    {icon:"🎯",title:"Smart Signals",sub:"LAGAI / KHAI with exact entry",
-     desc:"AI-powered signals with live odds, win probability gauges, and market trap detection.",col:C.accent3},
+    {icon:"🏏",title:"CricSense AI",sub:"India's #1 Cricket Intelligence",desc:"Real-time AI predictions, live match analysis, and smart signals — all in one place.",col:C.accent},
+    {icon:"⚡",title:"Live AI Analysis",sub:"Ball-by-ball Intelligence",desc:"7 AI tabs: Ball predictions, Wicket alerts, Score forecasts, Market traps, Momentum shifts, Player stats & What If scenarios.",col:C.accent2},
+    {icon:"🎯",title:"Smart Signals",sub:"LAGAI / KHAI with exact entry",desc:"AI-powered signals with live odds, win probability gauges, and market trap detection.",col:C.accent3},
   ];
   const sl=slides[step];
   return(
-    <div style={{position:"fixed",inset:0,background:C.bg,display:"flex",flexDirection:"column",
-      alignItems:"center",justifyContent:"center",zIndex:9999,padding:24}}>
-      <div style={{position:"absolute",inset:0,opacity:.04,
-        backgroundImage:`linear-gradient(${C.accent} 1px,transparent 1px),linear-gradient(90deg,${C.accent} 1px,transparent 1px)`,
-        backgroundSize:"48px 48px",pointerEvents:"none"}}/>
+    <div style={{position:"fixed",inset:0,background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:9999,padding:24}}>
+      <div style={{position:"absolute",inset:0,opacity:.04,backgroundImage:`linear-gradient(${C.accent} 1px,transparent 1px),linear-gradient(90deg,${C.accent} 1px,transparent 1px)`,backgroundSize:"48px 48px",pointerEvents:"none"}}/>
       <div style={{position:"relative",maxWidth:380,width:"100%",textAlign:"center"}}>
         <div className="anim-float" style={{fontSize:88,marginBottom:24,filter:`drop-shadow(0 0 24px ${sl.col})`}}>{sl.icon}</div>
-        <h1 style={{fontFamily:"var(--fh)",fontSize:34,fontWeight:800,color:sl.col,
-          textShadow:`0 0 30px ${sl.col}`,marginBottom:8}}>{sl.title}</h1>
-        <p style={{fontFamily:"var(--fm)",fontSize:11,color:C.text2,letterSpacing:2,
-          textTransform:"uppercase",marginBottom:18}}>{sl.sub}</p>
+        <h1 style={{fontFamily:"var(--fh)",fontSize:34,fontWeight:800,color:sl.col,textShadow:`0 0 30px ${sl.col}`,marginBottom:8}}>{sl.title}</h1>
+        <p style={{fontFamily:"var(--fm)",fontSize:11,color:C.text2,letterSpacing:2,textTransform:"uppercase",marginBottom:18}}>{sl.sub}</p>
         <p style={{fontSize:17,color:C.text,lineHeight:1.65,marginBottom:40}}>{sl.desc}</p>
         <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:32}}>
-          {slides.map((_,i)=>(
-            <div key={i} onClick={()=>setStep(i)} style={{
-              width:i===step?28:8,height:8,borderRadius:4,cursor:"pointer",
-              background:i===step?sl.col:"rgba(255,255,255,.18)",transition:"all .3s"}}/>
-          ))}
+          {slides.map((_,i)=><div key={i} onClick={()=>setStep(i)} style={{width:i===step?28:8,height:8,borderRadius:4,cursor:"pointer",background:i===step?sl.col:"rgba(255,255,255,.18)",transition:"all .3s"}}/>)}
         </div>
-        <button onClick={()=>step<slides.length-1?setStep(step+1):onDone()} style={{
-          width:"100%",padding:"16px",
-          background:`linear-gradient(135deg,${sl.col},${sl.col}99)`,
-          color:"#000",fontSize:18,fontWeight:700,borderRadius:14,
-          fontFamily:"var(--fh)",boxShadow:`0 0 30px ${sl.col}44`,transition:"all .3s",
-          border:`1px solid ${sl.col}`,
-        }}>{step<slides.length-1?"Aage Chalo →":"🚀 Shuru Karo!"}</button>
-        {step<slides.length-1&&(
-          <button onClick={onDone} style={{marginTop:14,color:C.text2,fontSize:14}}>Skip →</button>
-        )}
+        <button onClick={()=>step<slides.length-1?setStep(step+1):onDone()} style={{width:"100%",padding:"16px",background:`linear-gradient(135deg,${sl.col},${sl.col}99)`,color:"#000",fontSize:18,fontWeight:700,borderRadius:14,fontFamily:"var(--fh)",boxShadow:`0 0 30px ${sl.col}44`,border:`1px solid ${sl.col}`}}>
+          {step<slides.length-1?"Aage Chalo →":"🚀 Shuru Karo!"}
+        </button>
+        {step<slides.length-1&&<button onClick={onDone} style={{marginTop:14,color:C.text2,fontSize:14}}>Skip →</button>}
       </div>
     </div>
   );
 }
 
-// ── Win Gauge ────────────────────────────────────
-function WinGauge({prob,label,color,size=110}){
-  const r=(size/2)-10; const circ=2*Math.PI*r; const dash=(prob/100)*circ;
-  return(
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
-      <div style={{position:"relative",width:size,height:size}}>
-        <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
-          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,.07)" strokeWidth={9}/>
-          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={9}
-            strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-            style={{transition:"stroke-dasharray 1.2s ease",filter:`drop-shadow(0 0 6px ${color})`}}/>
-        </svg>
-        <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",
-          alignItems:"center",justifyContent:"center"}}>
-          <span style={{fontFamily:"var(--fm)",fontSize:size*.19,fontWeight:700,color,
-            textShadow:`0 0 12px ${color}`}}>{prob}%</span>
-        </div>
-      </div>
-      <span style={{fontSize:11,fontWeight:600,color:C.text2,fontFamily:"var(--fb)",
-        textAlign:"center",maxWidth:size,lineHeight:1.3}}>{label}</span>
-    </div>
-  );
-}
-
-// ── Live Badge ───────────────────────────────────
 function LiveBadge(){
   return(
-    <span style={{display:"inline-flex",alignItems:"center",gap:5,
-      background:"rgba(255,59,48,.15)",border:"1px solid rgba(255,59,48,.5)",
-      color:"#ff3b30",fontSize:10,fontFamily:"var(--fm)",
-      padding:"2px 8px",borderRadius:20,letterSpacing:1}}>
-      <span style={{width:6,height:6,borderRadius:"50%",background:"#ff3b30",
-        animation:"pulse 1.2s ease infinite",boxShadow:"0 0 6px #ff3b30"}}/>
+    <span style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(255,59,48,.15)",border:"1px solid rgba(255,59,48,.5)",color:"#ff3b30",fontSize:10,fontFamily:"var(--fm)",padding:"2px 8px",borderRadius:20,letterSpacing:1}}>
+      <span style={{width:6,height:6,borderRadius:"50%",background:"#ff3b30",animation:"pulse 1.2s ease infinite",boxShadow:"0 0 6px #ff3b30"}}/>
       LIVE
     </span>
   );
 }
 
-// ── Match Card ───────────────────────────────────
-function MatchCard({match,onClick,selected}){
-  const{t1,t2}=teams(match); const live=isLive(match);
-  const score=fmtScore(match.score); const prob=winProb(match);
+function WinGauge({prob,label,color,size=110}){
+  const r=(size/2)-10,circ=2*Math.PI*r,dash=(prob/100)*circ;
   return(
-    <div onClick={()=>onClick(match)} style={{
-      background:selected?`linear-gradient(135deg,rgba(0,229,255,.1),rgba(0,229,255,.04))`:C.card,
-      border:selected?`1px solid ${C.accent}`:`1px solid ${live?"rgba(255,59,48,.3)":C.border}`,
-      borderRadius:18,padding:18,cursor:"pointer",transition:"all .3s",marginBottom:12,
-      boxShadow:selected?`0 0 24px rgba(0,229,255,.15)`:live?"0 0 12px rgba(255,59,48,.08)":"none",
-    }} className="anim-slide">
-      {/* Header row */}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <span style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",letterSpacing:1}}>
-          {match.matchType?.toUpperCase()} · {match.series?.split(" ").slice(0,3).join(" ")}
-        </span>
-        {live?<LiveBadge/>:<span style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",
-          padding:"2px 8px",background:"rgba(255,255,255,.05)",borderRadius:20,
-          border:"1px solid rgba(255,255,255,.1)"}}>UPCOMING</span>}
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+      <div style={{position:"relative",width:size,height:size}}>
+        <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,.07)" strokeWidth={9}/>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={9} strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" style={{transition:"stroke-dasharray 1.2s ease",filter:`drop-shadow(0 0 6px ${color})`}}/>
+        </svg>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <span style={{fontFamily:"var(--fm)",fontSize:size*.19,fontWeight:700,color,textShadow:`0 0 12px ${color}`}}>{prob}%</span>
+        </div>
       </div>
-      {/* Teams */}
+      <span style={{fontSize:11,fontWeight:600,color:C.text2,textAlign:"center",maxWidth:size,lineHeight:1.3}}>{label}</span>
+    </div>
+  );
+}
+
+function MatchCard({match,onClick,selected}){
+  const{t1,t2}=teams(match),live=isLive(match),score=fmtScore(match.score),prob=match.prob||{t1:50,t2:50};
+  return(
+    <div onClick={()=>onClick(match)} className="anim-slide" style={{background:selected?`linear-gradient(135deg,rgba(0,229,255,.1),rgba(0,229,255,.04))`:C.card,border:selected?`1px solid ${C.accent}`:`1px solid ${live?"rgba(255,59,48,.3)":C.border}`,borderRadius:18,padding:18,cursor:"pointer",transition:"all .3s",marginBottom:12,boxShadow:selected?`0 0 24px rgba(0,229,255,.15)`:"none"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <span style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",letterSpacing:1}}>{match.matchType?.toUpperCase()} · {match.series?.split(" ").slice(0,3).join(" ")}</span>
+        {live?<LiveBadge/>:<span style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",padding:"2px 8px",background:"rgba(255,255,255,.05)",borderRadius:20,border:"1px solid rgba(255,255,255,.1)"}}>UPCOMING</span>}
+      </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",gap:10,marginBottom:14}}>
         <div>
           <div style={{fontSize:26,marginBottom:3}}>{emoji(t1)}</div>
           <div style={{fontFamily:"var(--fh)",fontSize:16,fontWeight:700,color:C.text}}>{abbr(t1)}</div>
-          <div style={{fontSize:11,color:C.text2,lineHeight:1.3}}>{t1}</div>
+          <div style={{fontSize:11,color:C.text2}}>{t1}</div>
         </div>
-        <div style={{fontFamily:"var(--fm)",fontSize:11,color:C.text2,fontWeight:700,
-          padding:"5px 10px",background:"rgba(255,255,255,.05)",borderRadius:8}}>VS</div>
+        <div style={{fontFamily:"var(--fm)",fontSize:11,color:C.text2,padding:"5px 10px",background:"rgba(255,255,255,.05)",borderRadius:8}}>VS</div>
         <div style={{textAlign:"right"}}>
           <div style={{fontSize:26,marginBottom:3}}>{emoji(t2)}</div>
           <div style={{fontFamily:"var(--fh)",fontSize:16,fontWeight:700,color:C.text}}>{abbr(t2)}</div>
-          <div style={{fontSize:11,color:C.text2,lineHeight:1.3}}>{t2}</div>
+          <div style={{fontSize:11,color:C.text2}}>{t2}</div>
         </div>
       </div>
-      {/* Score */}
-      {score&&(
-        <div style={{fontFamily:"var(--fm)",fontSize:12,color:C.accent,
-          background:"rgba(0,229,255,.07)",padding:"7px 12px",borderRadius:10,
-          marginBottom:12,textAlign:"center",border:"1px solid rgba(0,229,255,.15)"}}>{score}</div>
-      )}
-      {/* Win bar */}
+      {score&&<div style={{fontFamily:"var(--fm)",fontSize:12,color:C.accent,background:"rgba(0,229,255,.07)",padding:"7px 12px",borderRadius:10,marginBottom:12,textAlign:"center",border:"1px solid rgba(0,229,255,.15)"}}>{score}</div>}
       {live&&(
         <div>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:11,fontFamily:"var(--fm)"}}>
@@ -296,9 +181,7 @@ function MatchCard({match,onClick,selected}){
             <span style={{color:C.accent2}}>{prob.t2}%</span>
           </div>
           <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,.09)",overflow:"hidden"}}>
-            <div style={{height:"100%",width:`${prob.t1}%`,
-              background:`linear-gradient(90deg,${C.accent},${C.accent2})`,
-              borderRadius:3,transition:"width 1.2s ease"}}/>
+            <div style={{height:"100%",width:`${prob.t1}%`,background:`linear-gradient(90deg,${C.accent},${C.accent2})`,borderRadius:3,transition:"width 1.2s ease"}}/>
           </div>
         </div>
       )}
@@ -306,94 +189,7 @@ function MatchCard({match,onClick,selected}){
   );
 }
 
-// ── Ball Predictions ─────────────────────────────
-function BallPred({match}){
-  const balls=[
-    {n:1,t:"DOT",p:28,c:C.text2},{n:2,t:"4️⃣ FOUR",p:14,c:C.accent3},
-    {n:3,t:"WIDE",p:8,c:C.gold},{n:4,t:"1 RUN",p:31,c:C.accent},
-    {n:5,t:"🚨 WICKET",p:11,c:C.red},{n:6,t:"6️⃣ SIX",p:8,c:C.accent2},
-  ];
-  return(
-    <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
-      <div style={{fontSize:11,color:C.accent,marginBottom:14,fontFamily:"var(--fm)",letterSpacing:2}}>
-        ⚾ NEXT 6 BALLS PREDICTION
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
-        {balls.map(b=>(
-          <div key={b.n} style={{background:`${b.c}0d`,border:`1px solid ${b.c}30`,
-            borderRadius:12,padding:"12px 8px",textAlign:"center"}}>
-            <div style={{fontFamily:"var(--fm)",fontSize:10,color:C.text2,marginBottom:4}}>Ball {b.n}</div>
-            <div style={{fontFamily:"var(--fh)",fontSize:13,fontWeight:700,color:b.c,marginBottom:2}}>{b.t}</div>
-            <div style={{fontSize:11,color:C.text2,fontFamily:"var(--fm)"}}>{b.p}%</div>
-            <div style={{height:3,borderRadius:2,background:`rgba(255,255,255,.08)`,marginTop:6,overflow:"hidden"}}>
-              <div style={{height:"100%",width:`${b.p}%`,background:b.c,borderRadius:2}}/>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Market Signals ───────────────────────────────
-function Market({match}){
-  const prob=winProb(match); const{t1,t2}=teams(match);
-  const signal=prob.t1>prob.t2?"BUY":"WAIT";
-  return(
-    <div style={{display:"flex",flexDirection:"column",gap:12}}>
-      {/* LAGAI / KHAI */}
-      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
-        <div style={{fontSize:11,color:C.gold,marginBottom:14,fontFamily:"var(--fm)",letterSpacing:2}}>
-          💰 LAGAI / KHAI SIGNALS
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          {[{lbl:"LAGAI (BACK)",odds:p2odds(prob.t1),team:abbr(t1),c:C.green,sig:"✓ BUY",bg:"rgba(52,199,89,.1)",bc:"rgba(52,199,89,.3)"},
-            {lbl:"KHAI (LAY)",odds:p2odds(prob.t2),team:abbr(t2),c:C.red,sig:"⚠ WAIT",bg:"rgba(255,59,48,.1)",bc:"rgba(255,59,48,.3)"}
-          ].map(x=>(
-            <div key={x.lbl} style={{background:x.bg,border:`1px solid ${x.bc}`,borderRadius:12,padding:14,textAlign:"center"}}>
-              <div style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",letterSpacing:1,marginBottom:6}}>{x.lbl}</div>
-              <div style={{fontFamily:"var(--fh)",fontSize:26,fontWeight:800,color:x.c}}>{x.odds}</div>
-              <div style={{fontSize:11,color:C.text2,marginTop:2}}>{x.team}</div>
-              <div style={{marginTop:8,padding:"4px 8px",background:`${x.c}22`,borderRadius:6,
-                fontSize:11,color:x.c,fontWeight:700}}>{x.sig}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Market Trap */}
-      <div style={{background:"rgba(255,215,0,.06)",border:"1px solid rgba(255,215,0,.2)",borderRadius:14,padding:14}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <span style={{fontSize:24}}>🪤</span>
-          <div>
-            <div style={{fontSize:12,fontWeight:700,color:C.gold,marginBottom:3}}>Market Trap Alert</div>
-            <div style={{fontSize:12,color:C.text2}}>
-              Odds shifting against public sentiment. Smart money favors {abbr(prob.t1>prob.t2?t1:t2)}. 
-              Avoid chasing odds at current levels.
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Win prob display */}
-      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:14}}>
-        <div style={{fontSize:11,color:C.text2,fontFamily:"var(--fm)",letterSpacing:2,marginBottom:12}}>📊 WIN PROBABILITY</div>
-        {[{n:t1,p:prob.t1,c:C.accent},{n:t2,p:prob.t2,c:C.accent2}].map(x=>(
-          <div key={x.n} style={{marginBottom:10}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
-              <span style={{fontSize:13,color:C.text,fontFamily:"var(--fh)",fontWeight:600}}>{abbr(x.n)}</span>
-              <span style={{fontSize:13,color:x.c,fontFamily:"var(--fm)"}}>{x.p}%</span>
-            </div>
-            <div style={{height:8,background:"rgba(255,255,255,.08)",borderRadius:4,overflow:"hidden"}}>
-              <div style={{height:"100%",width:`${x.p}%`,background:x.c,borderRadius:4,
-                boxShadow:`0 0 8px ${x.c}80`,transition:"width 1.5s ease"}}/>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── AI Analysis Panel ────────────────────────────
+// AI Panel — calls /api/ai (no keys in frontend)
 const TABS=["Ball","Wicket","Score","Market","Momentum","Player","WhatIf"];
 const TCOLORS={Ball:C.accent,Wicket:C.red,Score:C.accent3,Market:C.gold,Momentum:C.accent2,Player:"#a78bfa",WhatIf:"#f472b6"};
 const TICONS={Ball:"⚾",Wicket:"🎯",Score:"📊",Market:"💰",Momentum:"⚡",Player:"👤",WhatIf:"🔮"};
@@ -404,95 +200,49 @@ function AIPanel({match}){
   const[result,setResult]=useState("");
   const[inp,setInp]=useState("");
   const[chat,setChat]=useState([]);
-  const{t1,t2}=teams(match); const score=fmtScore(match.score);
   const col=TCOLORS[tab];
 
-  function prompt(t){
-    const base=`Match: ${match.name}. Score: ${score||"Not started"}. Format: ${match.matchType}. Series: ${match.series}.`;
-    const ps={
-      Ball:`${base}\nPredict next 6 balls with specific outcomes (runs/dot/wicket probability). Format: Ball 1: [outcome - X%]. Be specific and use cricket terms. Mix Hindi-English.`,
-      Wicket:`${base}\nWicket probability analysis. Rate wicket danger 1-10 for next 3 overs. Which batsman is most vulnerable and why? Mention bowling matchups.`,
-      Score:`${base}\nScore projection engine. Predict final total range, current RR vs required, par score, over/under performance likelihood.`,
-      Market:`${base}\nBetting market analyst. LAGAI/KHAI signals, market traps to avoid, smart money movement, exact entry price recommendation. Be specific with odds.`,
-      Momentum:`${base}\nMomentum tracker. Rate momentum 1-10 for both teams. Last 3 overs analysis, key turning points, momentum shift triggers.`,
-      Player:`${base}\nPlayer performance analyst. Top performers analysis, form guide, key player to watch, head-to-head insights.`,
-      WhatIf:`${base}\nScenario analyst. Run 3 What-If scenarios: 1) Wicket falls in next 2 balls 2) 20-run over next 3) Rain delay 5 overs. Impact on result for each.`,
-    };
-    return ps[t]||ps.Ball;
-  }
-
   async function analyze(){
-    setLoading(true); setResult("");
-    try{ setResult(await ai(prompt(tab))); }
-    catch{ setResult("⚠️ AI engine momentarily busy. Thodi der baad try karo."); }
-    setLoading(false);
+    setLoading(true);setResult("");
+    const r=await fetchAI(match.id,tab,null);
+    setResult(r);setLoading(false);
   }
-
   async function send(){
     if(!inp.trim())return;
-    const q=inp.trim(); setInp("");
+    const q=inp.trim();setInp("");
     setChat(h=>[...h,{r:"u",t:q}]);
-    const p=`Match: ${match.name}, Score: ${score||"N/A"}.\nQuestion: ${q}\nAnswer as cricket expert in 3-4 sentences. Be specific. Hindi-English mix ok.`;
-    try{ const a=await ai(p); setChat(h=>[...h,{r:"a",t:a}]); }
-    catch{ setChat(h=>[...h,{r:"a",t:"⚠️ AI busy hai. Dobara try karo."}]); }
+    const a=await fetchAI(match.id,"chat",q);
+    setChat(h=>[...h,{r:"a",t:a}]);
   }
 
   return(
     <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,overflow:"hidden"}} className="anim-slide">
-      {/* Tab bar */}
       <div style={{display:"flex",overflowX:"auto",background:C.bg2,borderBottom:`1px solid ${C.border}`,scrollbarWidth:"none"}}>
         {TABS.map(t=>(
-          <button key={t} onClick={()=>{setTab(t);setResult("");}} style={{
-            padding:"12px 14px",flexShrink:0,
-            background:tab===t?`rgba(${t==="Ball"?"0,229,255":"255,107,53"},.12)`:"none",
-            color:tab===t?TCOLORS[t]:C.text2,fontSize:12,fontWeight:600,fontFamily:"var(--fb)",
-            borderBottom:tab===t?`2px solid ${TCOLORS[t]}`:"2px solid transparent",transition:"all .2s",
-          }}>{TICONS[t]} {t}</button>
+          <button key={t} onClick={()=>{setTab(t);setResult("");}} style={{padding:"12px 14px",flexShrink:0,background:tab===t?`${TCOLORS[t]}18`:"none",color:tab===t?TCOLORS[t]:C.text2,fontSize:12,fontWeight:600,fontFamily:"var(--fb)",borderBottom:tab===t?`2px solid ${TCOLORS[t]}`:"2px solid transparent",transition:"all .2s"}}>
+            {TICONS[t]} {t}
+          </button>
         ))}
       </div>
       <div style={{padding:16}}>
-        <button onClick={analyze} disabled={loading} style={{
-          width:"100%",padding:14,
-          background:`linear-gradient(135deg,${col},${col}99)`,
-          color:"#000",fontSize:15,fontWeight:700,borderRadius:12,
-          fontFamily:"var(--fh)",boxShadow:`0 4px 20px ${col}30`,marginBottom:16,
-          opacity:loading?.7:1,transition:"all .3s",
-        }}>{loading?"🤖 AI Soch Raha Hai...":`🧠 ${tab} Analysis Karo`}</button>
-        {result&&(
-          <div className="anim-fade" style={{background:"rgba(255,255,255,.03)",
-            border:`1px solid ${col}25`,borderRadius:12,padding:16,marginBottom:16,
-            fontSize:14,lineHeight:1.75,color:C.text,whiteSpace:"pre-wrap",fontFamily:"var(--fb)"}}>
-            {result}
-          </div>
-        )}
-        {/* Chatbot */}
+        <button onClick={analyze} disabled={loading} style={{width:"100%",padding:14,background:`linear-gradient(135deg,${col},${col}99)`,color:"#000",fontSize:15,fontWeight:700,borderRadius:12,fontFamily:"var(--fh)",boxShadow:`0 4px 20px ${col}30`,marginBottom:16,opacity:loading?.7:1}}>
+          {loading?"🤖 AI Soch Raha Hai...":`🧠 ${tab} Analysis Karo`}
+        </button>
+        {result&&<div className="anim-fade" style={{background:"rgba(255,255,255,.03)",border:`1px solid ${col}25`,borderRadius:12,padding:16,marginBottom:16,fontSize:14,lineHeight:1.75,color:C.text,whiteSpace:"pre-wrap",fontFamily:"var(--fb)"}}>{result}</div>}
         <div style={{borderTop:`1px solid ${C.border}`,paddingTop:14}}>
-          <div style={{fontSize:11,color:C.text2,marginBottom:10,fontFamily:"var(--fm)",letterSpacing:1}}>
-            💬 MATCH CHATBOT
-          </div>
+          <div style={{fontSize:11,color:C.text2,marginBottom:10,fontFamily:"var(--fm)",letterSpacing:1}}>💬 MATCH CHATBOT</div>
           {chat.length>0&&(
             <div style={{maxHeight:200,overflowY:"auto",marginBottom:12,display:"flex",flexDirection:"column",gap:8}}>
               {chat.map((m,i)=>(
                 <div key={i} style={{display:"flex",justifyContent:m.r==="u"?"flex-end":"flex-start"}}>
-                  <div style={{maxWidth:"82%",padding:"8px 12px",
-                    borderRadius:m.r==="u"?"12px 12px 0 12px":"12px 12px 12px 0",
-                    background:m.r==="u"?`rgba(0,229,255,.12)`:"rgba(255,255,255,.05)",
-                    border:`1px solid ${m.r==="u"?"rgba(0,229,255,.3)":C.border}`,
-                    fontSize:13,color:C.text,lineHeight:1.5,fontFamily:"var(--fb)"}}>
-                    {m.t}
-                  </div>
+                  <div style={{maxWidth:"82%",padding:"8px 12px",borderRadius:m.r==="u"?"12px 12px 0 12px":"12px 12px 12px 0",background:m.r==="u"?"rgba(0,229,255,.12)":"rgba(255,255,255,.05)",border:`1px solid ${m.r==="u"?"rgba(0,229,255,.3)":C.border}`,fontSize:13,color:C.text,lineHeight:1.5,fontFamily:"var(--fb)"}}>{m.t}</div>
                 </div>
               ))}
             </div>
           )}
           <div style={{display:"flex",gap:8}}>
-            <input value={inp} onChange={e=>setInp(e.target.value)}
-              onKeyDown={e=>e.key==="Enter"&&send()}
-              placeholder="Kuch bhi pucho match ke baare mein..."
-              style={{flex:1,padding:"10px 14px",background:"rgba(255,255,255,.05)",
-                border:`1px solid ${C.border}`,borderRadius:10,color:C.text,fontSize:13}}/>
-            <button onClick={send} style={{padding:"10px 16px",background:C.accent,
-              color:"#000",borderRadius:10,fontSize:16,fontWeight:700}}>→</button>
+            <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Kuch bhi pucho match ke baare mein..." style={{flex:1,padding:"10px 14px",background:"rgba(255,255,255,.05)",border:`1px solid ${C.border}`,borderRadius:10,color:C.text,fontSize:13}}/>
+            <button onClick={send} style={{padding:"10px 16px",background:C.accent,color:"#000",borderRadius:10,fontSize:16,fontWeight:700}}>→</button>
           </div>
         </div>
       </div>
@@ -500,153 +250,131 @@ function AIPanel({match}){
   );
 }
 
-// ── Momentum Meter ───────────────────────────────
-function Momentum({match}){
-  const prob=winProb(match); const{t1,t2}=teams(match);
-  const recent=["4","0","1","W","2","6","0","1","4","0"];
+function Market({match}){
+  const prob=match.prob||{t1:50,t2:50,t1n:"Team A",t2n:"Team B"};
+  const{t1,t2}=teams(match);
   return(
     <div style={{display:"flex",flexDirection:"column",gap:12}}>
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
-        <div style={{fontSize:11,color:C.accent3,marginBottom:14,fontFamily:"var(--fm)",letterSpacing:2}}>⚡ MOMENTUM METER</div>
-        {[{n:t1,p:prob.t1,c:C.accent},{n:t2,p:prob.t2,c:C.accent2}].map(x=>(
-          <div key={x.n} style={{marginBottom:14}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
-              <span style={{fontSize:14,color:C.text,fontFamily:"var(--fh)",fontWeight:700}}>{abbr(x.n)}</span>
-              <span style={{fontSize:13,color:x.c,fontFamily:"var(--fm)"}}>{x.p}/100</span>
+        <div style={{fontSize:11,color:C.gold,marginBottom:14,fontFamily:"var(--fm)",letterSpacing:2}}>💰 LAGAI / KHAI SIGNALS</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          {[{lbl:"LAGAI (BACK)",odds:p2odds(prob.t1),team:abbr(t1),c:C.green,sig:"✓ BUY",bg:"rgba(52,199,89,.1)",bc:"rgba(52,199,89,.3)"},
+            {lbl:"KHAI (LAY)",odds:p2odds(prob.t2),team:abbr(t2),c:C.red,sig:"⚠ WAIT",bg:"rgba(255,59,48,.1)",bc:"rgba(255,59,48,.3)"}
+          ].map(x=>(
+            <div key={x.lbl} style={{background:x.bg,border:`1px solid ${x.bc}`,borderRadius:12,padding:14,textAlign:"center"}}>
+              <div style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",letterSpacing:1,marginBottom:6}}>{x.lbl}</div>
+              <div style={{fontFamily:"var(--fh)",fontSize:26,fontWeight:800,color:x.c}}>{x.odds}</div>
+              <div style={{fontSize:11,color:C.text2,marginTop:2}}>{x.team}</div>
+              <div style={{marginTop:8,padding:"4px 8px",background:`${x.c}22`,borderRadius:6,fontSize:11,color:x.c,fontWeight:700}}>{x.sig}</div>
             </div>
-            <div style={{height:10,background:"rgba(255,255,255,.08)",borderRadius:5,overflow:"hidden"}}>
-              <div style={{height:"100%",width:`${x.p}%`,
-                background:`linear-gradient(90deg,${x.c}88,${x.c})`,
-                borderRadius:5,boxShadow:`0 0 10px ${x.c}60`,transition:"width 1.5s ease"}}/>
-            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{background:"rgba(255,215,0,.06)",border:"1px solid rgba(255,215,0,.2)",borderRadius:14,padding:14,display:"flex",gap:10,alignItems:"center"}}>
+        <span style={{fontSize:24}}>🪤</span>
+        <div>
+          <div style={{fontSize:12,fontWeight:700,color:C.gold,marginBottom:3}}>Market Trap Alert</div>
+          <div style={{fontSize:12,color:C.text2}}>Odds shifting against public sentiment. Smart money favors {abbr(prob.t1>prob.t2?t1:t2)}.</div>
+        </div>
+      </div>
+      {[{n:t1,p:prob.t1,c:C.accent},{n:t2,p:prob.t2,c:C.accent2}].map(x=>(
+        <div key={x.n} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <span style={{fontSize:14,color:C.text,fontFamily:"var(--fh)",fontWeight:700}}>{abbr(x.n)}</span>
+            <span style={{fontSize:13,color:x.c,fontFamily:"var(--fm)"}}>{x.p}%</span>
+          </div>
+          <div style={{height:8,background:"rgba(255,255,255,.08)",borderRadius:4,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${x.p}%`,background:x.c,borderRadius:4,boxShadow:`0 0 8px ${x.c}80`,transition:"width 1.5s ease"}}/>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BallPred(){
+  const balls=[{n:1,t:"DOT",p:28,c:C.text2},{n:2,t:"4️⃣ FOUR",p:14,c:C.accent3},{n:3,t:"WIDE",p:8,c:C.gold},{n:4,t:"1 RUN",p:31,c:C.accent},{n:5,t:"🚨 WICKET",p:11,c:C.red},{n:6,t:"6️⃣ SIX",p:8,c:C.accent2}];
+  return(
+    <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
+      <div style={{fontSize:11,color:C.accent,marginBottom:14,fontFamily:"var(--fm)",letterSpacing:2}}>⚾ NEXT 6 BALLS PREDICTION</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+        {balls.map(b=>(
+          <div key={b.n} style={{background:`${b.c}0d`,border:`1px solid ${b.c}30`,borderRadius:12,padding:"12px 8px",textAlign:"center"}}>
+            <div style={{fontFamily:"var(--fm)",fontSize:10,color:C.text2,marginBottom:4}}>Ball {b.n}</div>
+            <div style={{fontFamily:"var(--fh)",fontSize:13,fontWeight:700,color:b.c,marginBottom:2}}>{b.t}</div>
+            <div style={{fontSize:11,color:C.text2,fontFamily:"var(--fm)"}}>{b.p}%</div>
           </div>
         ))}
-      </div>
-      {/* Recent balls */}
-      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
-        <div style={{fontSize:11,color:C.text2,marginBottom:12,fontFamily:"var(--fm)",letterSpacing:2}}>🎯 RECENT DELIVERIES</div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-          {recent.map((b,i)=>{
-            const c=b==="W"?C.red:b==="0"?C.text2:b==="4"?C.accent3:b==="6"?C.accent2:C.accent;
-            return(
-              <div key={i} style={{width:36,height:36,borderRadius:8,display:"flex",
-                alignItems:"center",justifyContent:"center",
-                background:`${c}18`,border:`1px solid ${c}44`,
-                fontFamily:"var(--fm)",fontSize:13,fontWeight:700,color:c}}>{b}</div>
-            );
-          })}
-        </div>
       </div>
     </div>
   );
 }
 
-// ── Match Detail ─────────────────────────────────
 function MatchDetail({match,dtab,setDtab}){
-  const{t1,t2}=teams(match); const prob=winProb(match);
-  const score=fmtScore(match.score); const live=isLive(match);
-  const dtabs=["Overview","AI Analysis","Signals","Ball","Momentum"];
+  const{t1,t2}=teams(match),prob=match.prob||{t1:50,t2:50},score=fmtScore(match.score),live=isLive(match);
+  const dtabs=["Overview","AI Analysis","Signals","Ball Pred"];
   return(
     <div className="anim-slide">
-      {/* Header */}
-      <div style={{background:`linear-gradient(135deg,${C.bg2},${C.bg3})`,
-        border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:16}}>
+      <div style={{background:`linear-gradient(135deg,${C.bg2},${C.bg3})`,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
           <div>
-            <div style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",letterSpacing:2,marginBottom:4}}>
-              {match.matchType} · {match.series}
-            </div>
+            <div style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",letterSpacing:2,marginBottom:4}}>{match.matchType} · {match.series}</div>
             <div style={{fontSize:12,color:C.text2}}>📍 {match.venue||"TBD"}</div>
           </div>
           {live?<LiveBadge/>:<span style={{fontSize:11,color:C.text2,fontFamily:"var(--fm)"}}>UPCOMING</span>}
         </div>
-        {/* Gauges */}
         <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",gap:12,marginBottom:16}}>
           <WinGauge prob={prob.t1} label={t1} color={C.accent} size={100}/>
           <div style={{textAlign:"center"}}>
             <div style={{fontFamily:"var(--fm)",fontSize:11,color:C.text2,marginBottom:6}}>VS</div>
-            {score&&(
-              <div style={{fontSize:10,color:C.accent,fontFamily:"var(--fm)",
-                background:"rgba(0,229,255,.08)",padding:"4px 8px",borderRadius:6,
-                border:"1px solid rgba(0,229,255,.2)",whiteSpace:"nowrap"}}>{score}</div>
-            )}
+            {score&&<div style={{fontSize:10,color:C.accent,fontFamily:"var(--fm)",background:"rgba(0,229,255,.08)",padding:"4px 8px",borderRadius:6,border:"1px solid rgba(0,229,255,.2)"}}>{score}</div>}
           </div>
           <WinGauge prob={prob.t2} label={t2} color={C.accent2} size={100}/>
         </div>
-        {/* Progress */}
         <div style={{height:7,borderRadius:4,background:"rgba(255,255,255,.08)",overflow:"hidden"}}>
-          <div style={{height:"100%",width:`${prob.t1}%`,
-            background:`linear-gradient(90deg,${C.accent},${C.accent2})`,
-            borderRadius:4,transition:"width 1.5s ease",
-            boxShadow:`0 0 12px ${C.accent}60`}}/>
+          <div style={{height:"100%",width:`${prob.t1}%`,background:`linear-gradient(90deg,${C.accent},${C.accent2})`,borderRadius:4,transition:"width 1.5s ease",boxShadow:`0 0 12px ${C.accent}60`}}/>
         </div>
         <div style={{display:"flex",justifyContent:"space-between",marginTop:5}}>
           <span style={{fontSize:10,color:C.accent,fontFamily:"var(--fm)"}}>{prob.t1}% {abbr(t1)}</span>
           <span style={{fontSize:10,color:C.accent2,fontFamily:"var(--fm)"}}>{abbr(t2)} {prob.t2}%</span>
         </div>
       </div>
-
-      {/* Sub tabs */}
       <div style={{display:"flex",gap:8,marginBottom:16,overflowX:"auto",scrollbarWidth:"none"}}>
         {dtabs.map(t=>(
-          <button key={t} onClick={()=>setDtab(t)} style={{
-            padding:"8px 16px",flexShrink:0,
-            background:dtab===t?C.accent:"rgba(255,255,255,.05)",
-            color:dtab===t?"#000":C.text2,borderRadius:22,fontSize:12,fontWeight:600,
-            fontFamily:"var(--fb)",border:`1px solid ${dtab===t?C.accent:C.border}`,
-            transition:"all .2s",
-          }}>{t}</button>
+          <button key={t} onClick={()=>setDtab(t)} style={{padding:"8px 16px",flexShrink:0,background:dtab===t?C.accent:"rgba(255,255,255,.05)",color:dtab===t?"#000":C.text2,borderRadius:22,fontSize:12,fontWeight:600,fontFamily:"var(--fb)",border:`1px solid ${dtab===t?C.accent:C.border}`,transition:"all .2s"}}>{t}</button>
         ))}
       </div>
-
-      {/* Content */}
       {dtab==="Overview"&&(
-        <div style={{display:"flex",flexDirection:"column",gap:12}} className="anim-slide">
-          <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
-            <div style={{fontSize:11,color:C.accent2,marginBottom:12,fontFamily:"var(--fm)",letterSpacing:2}}>📋 MATCH INFO</div>
-            {[["Format",match.matchType],["Series",match.series],["Venue",match.venue||"TBD"],["Status",match.status]].map(([k,v])=>(
-              <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.border}`}}>
-                <span style={{fontSize:13,color:C.text2}}>{k}</span>
-                <span style={{fontSize:13,color:C.text,fontWeight:600,textAlign:"right",maxWidth:"60%"}}>{v||"—"}</span>
-              </div>
-            ))}
-          </div>
+        <div className="anim-slide" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
+          <div style={{fontSize:11,color:C.accent2,marginBottom:12,fontFamily:"var(--fm)",letterSpacing:2}}>📋 MATCH INFO</div>
+          {[["Format",match.matchType],["Series",match.series],["Venue",match.venue||"TBD"],["Status",match.status]].map(([k,v])=>(
+            <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.border}`}}>
+              <span style={{fontSize:13,color:C.text2}}>{k}</span>
+              <span style={{fontSize:13,color:C.text,fontWeight:600,textAlign:"right",maxWidth:"60%"}}>{v||"—"}</span>
+            </div>
+          ))}
         </div>
       )}
       {dtab==="AI Analysis"&&<AIPanel match={match}/>}
       {dtab==="Signals"&&<Market match={match}/>}
-      {dtab==="Ball"&&<BallPred match={match}/>}
-      {dtab==="Momentum"&&<Momentum match={match}/>}
+      {dtab==="Ball Pred"&&<BallPred match={match}/>}
     </div>
   );
 }
 
-// ── Header ───────────────────────────────────────
 function Header({n,onRefresh,spinning}){
   return(
-    <div style={{position:"sticky",top:0,zIndex:100,
-      background:"rgba(5,10,15,.96)",backdropFilter:"blur(20px)",
-      borderBottom:`1px solid ${C.border}`,padding:"12px 16px"}}>
+    <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(5,10,15,.96)",backdropFilter:"blur(20px)",borderBottom:`1px solid ${C.border}`,padding:"12px 16px"}}>
       <div style={{maxWidth:760,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div>
-          <div style={{fontFamily:"var(--fh)",fontSize:21,fontWeight:800,color:C.accent,
-            textShadow:`0 0 20px ${C.accent}60`,letterSpacing:-.5}}>
+          <div style={{fontFamily:"var(--fh)",fontSize:21,fontWeight:800,color:C.accent,textShadow:`0 0 20px ${C.accent}60`,letterSpacing:-.5}}>
             🏏 CricSense <span style={{color:C.accent2}}>AI</span>
           </div>
-          <div style={{fontFamily:"var(--fm)",fontSize:9,color:C.text2,letterSpacing:2}}>
-            INDIA'S #1 CRICKET INTELLIGENCE
-          </div>
+          <div style={{fontFamily:"var(--fm)",fontSize:9,color:C.text2,letterSpacing:2}}>INDIA'S #1 CRICKET INTELLIGENCE</div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{fontFamily:"var(--fm)",fontSize:10,color:C.text2,
-            background:"rgba(255,255,255,.05)",padding:"4px 10px",
-            borderRadius:8,border:`1px solid ${C.border}`}}>{n} matches</div>
-          <button onClick={onRefresh} style={{
-            background:"rgba(0,229,255,.1)",border:`1px solid rgba(0,229,255,.3)`,
-            color:C.accent,padding:"7px 14px",borderRadius:9,fontSize:13,
-            fontFamily:"var(--fb)",fontWeight:600,
-            animation:spinning?"spin 1s linear infinite":"none",
-          }}>⟳ Refresh</button>
+          <div style={{fontFamily:"var(--fm)",fontSize:10,color:C.text2,background:"rgba(255,255,255,.05)",padding:"4px 10px",borderRadius:8,border:`1px solid ${C.border}`}}>{n} matches</div>
+          <button onClick={onRefresh} style={{background:"rgba(0,229,255,.1)",border:`1px solid rgba(0,229,255,.3)`,color:C.accent,padding:"7px 14px",borderRadius:9,fontSize:13,fontFamily:"var(--fb)",fontWeight:600,animation:spinning?"spin 1s linear infinite":"none"}}>⟳ Refresh</button>
         </div>
       </div>
     </div>
@@ -664,65 +392,36 @@ function App(){
   const[sel,setSel]=useState(null);
   const[dtab,setDtab]=useState("Overview");
   const[mtab,setMtab]=useState("live");
-  const[adOpen,setAdOpen]=useState(false);
 
   const load=useCallback(async(r=false)=>{
     r?setSpinning(true):setLoading(true);
-    try{ setMatches(await fetchMatches()); }catch{}
-    setLoading(false); setSpinning(false);
+    const m=await fetchMatches();
+    setMatches(m);
+    setLoading(false);setSpinning(false);
   },[]);
 
-  useEffect(()=>{ load(); },[]);
-  useEffect(()=>{ const t=setInterval(()=>load(true),60000); return()=>clearInterval(t); },[]);
-
-  function selectMatch(m){
-    setSel(m); setDtab("Overview");
-    if(Math.random()>.65)setAdOpen(true);
-  }
+  useEffect(()=>{load();},[]);
+  useEffect(()=>{const t=setInterval(()=>load(true),60000);return()=>clearInterval(t);},[]);
 
   const live=matches.filter(isLive);
   const upcoming=matches.filter(m=>!isLive(m));
-  const shown=mtab==="demo"?DEMOS:mtab==="live"?live:upcoming;
+  const shown=mtab==="live"?live:upcoming;
 
   if(!ob)return<Onboarding onDone={()=>{localStorage.setItem("csob","1");setOb(true);}}/>;
 
   return(
     <div style={{minHeight:"100vh",background:C.bg}}>
-      {/* Grid bg */}
-      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,opacity:.025,
-        backgroundImage:`linear-gradient(${C.accent} 1px,transparent 1px),linear-gradient(90deg,${C.accent} 1px,transparent 1px)`,
-        backgroundSize:"56px 56px"}}/>
-
-      <Header n={matches.length||DEMOS.length} onRefresh={()=>load(true)} spinning={spinning}/>
-
-      <div style={{maxWidth:760,margin:"0 auto",paddingBottom:80,position:"relative",zIndex:1}}>
-        {/* Main tabs */}
-        <div style={{display:"flex",borderBottom:`1px solid ${C.border}`,
-          background:C.bg2,position:"sticky",top:61,zIndex:90}}>
-          {[{id:"live",lbl:`🔴 Live (${live.length})`},
-            {id:"upcoming",lbl:`⏰ Upcoming (${upcoming.length})`},
-            {id:"demo",lbl:"🎮 Demo"}
-          ].map(t=>(
-            <button key={t.id} onClick={()=>{setMtab(t.id);setSel(null);}} style={{
-              flex:1,padding:"13px 8px",
-              background:mtab===t.id?"rgba(0,229,255,.07)":"none",
-              color:mtab===t.id?C.accent:C.text2,fontSize:12,fontWeight:600,
-              fontFamily:"var(--fb)",
-              borderBottom:mtab===t.id?`2px solid ${C.accent}`:"2px solid transparent",
-              transition:"all .2s",
-            }}>{t.lbl}</button>
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,opacity:.025,backgroundImage:`linear-gradient(${C.accent} 1px,transparent 1px),linear-gradient(90deg,${C.accent} 1px,transparent 1px)`,backgroundSize:"56px 56px"}}/>
+      <Header n={matches.length} onRefresh={()=>load(true)} spinning={spinning}/>
+      <div style={{maxWidth:760,margin:"0 auto",paddingBottom:60,position:"relative",zIndex:1}}>
+        <div style={{display:"flex",borderBottom:`1px solid ${C.border}`,background:C.bg2,position:"sticky",top:61,zIndex:90}}>
+          {[{id:"live",lbl:`🔴 Live (${live.length})`},{id:"upcoming",lbl:`⏰ Upcoming (${upcoming.length})`}].map(t=>(
+            <button key={t.id} onClick={()=>{setMtab(t.id);setSel(null);}} style={{flex:1,padding:"13px 8px",background:mtab===t.id?"rgba(0,229,255,.07)":"none",color:mtab===t.id?C.accent:C.text2,fontSize:12,fontWeight:600,fontFamily:"var(--fb)",borderBottom:mtab===t.id?`2px solid ${C.accent}`:"2px solid transparent",transition:"all .2s"}}>{t.lbl}</button>
           ))}
         </div>
-
-        {/* Content area */}
         {sel?(
           <div style={{padding:16}}>
-            <button onClick={()=>setSel(null)} style={{
-              display:"flex",alignItems:"center",gap:6,
-              background:"rgba(255,255,255,.05)",border:`1px solid ${C.border}`,
-              color:C.text2,padding:"8px 16px",borderRadius:10,fontSize:13,
-              fontFamily:"var(--fb)",marginBottom:16,
-            }}>← Wapas</button>
+            <button onClick={()=>setSel(null)} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.05)",border:`1px solid ${C.border}`,color:C.text2,padding:"8px 16px",borderRadius:10,fontSize:13,fontFamily:"var(--fb)",marginBottom:16}}>← Wapas</button>
             <MatchDetail match={sel} dtab={dtab} setDtab={setDtab}/>
           </div>
         ):(
@@ -735,47 +434,15 @@ function App(){
             ):shown.length===0?(
               <div style={{textAlign:"center",padding:48,color:C.text2}}>
                 <div style={{fontSize:44,marginBottom:12}}>🌙</div>
-                <div style={{marginBottom:6}}>Abhi koi {mtab==="live"?"live":"upcoming"} match nahi hai.</div>
-                <div style={{fontSize:12}}>Demo tab mein practice karo!</div>
+                <div>Abhi koi {mtab==="live"?"live":"upcoming"} match nahi hai.</div>
               </div>
             ):(
-              <>
-                {mtab==="demo"&&(
-                  <div style={{background:"rgba(255,215,0,.07)",border:"1px solid rgba(255,215,0,.2)",
-                    borderRadius:12,padding:12,marginBottom:14,display:"flex",gap:10,alignItems:"center"}}>
-                    <span style={{fontSize:22}}>🎮</span>
-                    <div>
-                      <div style={{fontSize:13,fontWeight:700,color:C.gold}}>Demo Mode</div>
-                      <div style={{fontSize:12,color:C.text2}}>Practice karo. Set CRICKET_KEY for live data.</div>
-                    </div>
-                  </div>
-                )}
-                {shown.map(m=>(
-                  <MatchCard key={m.id} match={m} onClick={selectMatch} selected={sel?.id===m.id}/>
-                ))}
-              </>
+              shown.map(m=><MatchCard key={m.id} match={m} onClick={m=>{setSel(m);setDtab("Overview");}} selected={sel?.id===m.id}/>)
             )}
           </div>
         )}
       </div>
-
-      {/* Ad banner */}
-      {adOpen&&(
-        <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:500,
-          background:`linear-gradient(135deg,${C.bg2},${C.bg3})`,
-          border:`1px solid rgba(255,215,0,.25)`,padding:"12px 16px",
-          display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div>
-            <div style={{fontSize:12,color:C.gold,fontWeight:700}}>🎯 Safe Bet Alert!</div>
-            <div style={{fontSize:11,color:C.text2}}>AI ne high confidence signal detect kiya. 18+ only.</div>
-          </div>
-          <button onClick={()=>setAdOpen(false)} style={{color:C.text2,fontSize:20,padding:4}}>×</button>
-        </div>
-      )}
-
-      {/* Disclaimer */}
-      <div style={{textAlign:"center",fontSize:10,color:"rgba(255,255,255,.18)",
-        fontFamily:"var(--fm)",position:"fixed",bottom:adOpen?52:6,left:0,right:0,pointerEvents:"none"}}>
+      <div style={{textAlign:"center",fontSize:10,color:"rgba(255,255,255,.18)",fontFamily:"var(--fm)",padding:"8px 0 16px",position:"fixed",bottom:0,left:0,right:0,pointerEvents:"none"}}>
         Entertainment Only · 18+ · Responsible Gambling
       </div>
     </div>
