@@ -1,72 +1,24 @@
-import { getCurrentMatches } from "../_lib/cricket.js";
-import { broadcastToGroup } from "../_lib/telegram.js";
-import { getPredictions, saveResult, getAccuracy } from "../_lib/db.js";
-import { verifyCronSecret, config } from "../_lib/config.js";
+import { getMatches } from "../_lib/cricket.js";
+import { broadcast } from "../_lib/tg.js";
+import { getPreds, saveResult, getAccuracy } from "../_lib/db.js";
+import { verifyCron } from "../_lib/config.js";
 
 export default async function handler(req, res) {
-  if (!verifyCronSecret(req)) {
-    return res.status(401).json({ ok: false, error: "Unauthorized" });
+  if (!verifyCron(req)) return res.status(401).json({ error: "Unauthorized" });
+  const matches = await getMatches();
+  const preds = await getPreds(50);
+  let checked = 0;
+  for (const m of matches) {
+    const s = m.status?.toLowerCase() || "";
+    if (!s.includes("won") && !s.includes("result")) continue;
+    const pred = preds.find(p => p.matchId === m.id);
+    if (!pred) continue;
+    const winner = s.split(" won")[0]?.trim();
+    const correct = winner && pred.prediction && winner.toLowerCase().includes(pred.prediction.toLowerCase().split(" ")[0]);
+    await saveResult({ matchId: m.id, matchName: m.name, predicted: pred.prediction, actual: winner, correct: !!correct });
+    const acc = await getAccuracy();
+    await broadcast(`🏁 <b>MATCH RESULT!</b>\n\n🏏 <b>${m.name}</b>\nResult: ${m.status}\n\n${correct ? "✅" : "❌"} AI was <b>${correct ? "CORRECT 🎉" : "wrong 😅"}</b>\n\n📈 Overall Accuracy: <b>${acc.pct}%</b>`);
+    checked++;
   }
-
-  try {
-    const matches = await getCurrentMatches();
-    const predictions = await getPredictions(50);
-
-    let resultsChecked = 0;
-
-    for (const match of matches) {
-      const status = match.status?.toLowerCase() || "";
-      const isFinished = status.includes("won") || status.includes("result") ||
-        status.includes("complete") || status.includes("finished");
-
-      if (!isFinished) continue;
-
-      // Find prediction for this match
-      const pred = predictions.find(p => p.matchId === match.id);
-      if (!pred) continue;
-
-      // Determine winner from status
-      const winner = status.includes("won") ? match.status.split(" won")[0].trim() : null;
-      const correct = winner && pred.prediction &&
-        winner.toLowerCase().includes(pred.prediction.toLowerCase().split(" ")[0]);
-
-      await saveResult({
-        matchId: match.id,
-        matchName: match.name,
-        predicted: pred.prediction,
-        actual: winner || "Unknown",
-        correct: !!correct,
-      });
-
-      resultsChecked++;
-
-      // Broadcast result
-      const acc = await getAccuracy();
-      const msg = `🏁 <b>MATCH RESULT!</b>
-
-🏏 <b>${match.name}</b>
-📊 Result: ${match.status}
-
-${correct ? "✅" : "❌"} AI Prediction: <b>${pred.prediction}</b> — ${correct ? "SAHI NIKLA! 🎉" : "Is baar chuuk gayi AI 😅"}
-
-📈 <b>Overall Accuracy: ${acc.percentage}%</b>
-
-👉 <a href="${config.appUrl}">Next match analysis</a>`;
-
-      await broadcastToGroup(msg);
-    }
-
-    const finalAcc = await getAccuracy();
-
-    return res.status(200).json({
-      ok: true,
-      resultsChecked,
-      accuracy: finalAcc,
-    });
-
-  } catch (e) {
-    console.error("Results cron error:", e);
-    return res.status(500).json({ ok: false, error: e.message });
-  }
+  res.json({ ok: true, checked });
 }
-
