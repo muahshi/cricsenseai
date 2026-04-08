@@ -1,27 +1,46 @@
 # 🏏 CricSense AI — India's #1 Cricket Intelligence
 
-> AI-powered cricket predictions, live analysis, Telegram bot, and automated alerts.
-
-![CricSense AI](https://img.shields.io/badge/CricSense-AI%20Cricket-00e5ff?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Live-39ff14?style=for-the-badge)
-![Version](https://img.shields.io/badge/Version-2.0-ff6b35?style=for-the-badge)
+> AI-powered cricket predictions, live analysis, Telegram bot & automated alerts.
+> **All API keys are server-side only — never exposed to the browser.**
 
 ---
 
-## ⚡ Quick Deploy (GitHub Pages — Zero Build!)
+## 🚀 Vercel Deploy Steps (5 minutes)
 
-1. **Fork / Upload** this repo to GitHub
-2. Go to **Settings → Pages → Source: main branch / root**
-3. Open `index.html` and add your API keys in the `CFG` object at the top
-4. Done! Your app is live at `https://yourusername.github.io/cricsense-ai/`
+### Step 1 — GitHub pe push karo
+```bash
+git init
+git add .
+git commit -m "CricSense AI"
+git remote add origin https://github.com/YOUR_USERNAME/cricsense-ai.git
+git push -u origin main
+```
 
-```javascript
-// In index.html, find this section and add your keys:
-const CFG = {
-  CRICKET_KEY: "your-cricapi-key",   // https://cricapi.com
-  GROQ_KEY:    "your-groq-key",      // https://console.groq.com (FREE)
-  ODDS_KEY:    "your-odds-key",      // Optional
-};
+### Step 2 — Vercel pe import karo
+1. [vercel.com](https://vercel.com) → **New Project**
+2. Apna GitHub repo select karo
+3. Framework: **Other**
+4. Deploy karo
+
+### Step 3 — Environment Variables add karo
+Vercel Dashboard → Project → **Settings → Environment Variables**
+
+| Variable | Value | Kahan se milega |
+|----------|-------|-----------------|
+| `CRICKET_KEY` | cricapi key | [cricapi.com](https://cricapi.com) — FREE (100/day) |
+| `GROQ_KEY` | groq key | [console.groq.com](https://console.groq.com) — FREE |
+| `ODDS_KEY` | odds key | [the-odds-api.com](https://the-odds-api.com) — optional |
+| `TELEGRAM_BOT_TOKEN` | bot token | [@BotFather](https://t.me/BotFather) on Telegram |
+| `TELEGRAM_GROUP_ID` | group ID | [@userinfobot](https://t.me/userinfobot) se pata karo |
+| `MONGODB_URI` | mongo uri | [mongodb.com/atlas](https://mongodb.com/atlas) — FREE 512MB (optional) |
+| `CRON_SECRET` | koi bhi string | Khud banao, e.g. `abc123xyz` |
+
+### Step 4 — Redeploy (keys apply karne ke liye)
+Vercel Dashboard → Deployments → **Redeploy**
+
+### Step 5 — Telegram webhook register karo (ek baar)
+```
+https://YOUR-APP.vercel.app/api/setup?secret=YOUR_CRON_SECRET
 ```
 
 ---
@@ -30,140 +49,49 @@ const CFG = {
 
 ```
 cricsense-ai/
+├── index.html              ← Frontend (NO API keys!)
+├── package.json
+├── vercel.json             ← Routing + cron config
+├── .env.example            ← Env vars template
 │
-├── index.html          ← MAIN APP (self-contained, no build needed!)
-│
-├── api/                ← Vercel Serverless Functions (for Telegram bot)
-│   ├── telegram.js     ← Telegram webhook handler
-│   ├── predictions.js  ← Predictions API
-│   ├── setup.js        ← One-time webhook setup
-│   └── _lib/
-│       ├── config.js   ← Environment variables
-│       ├── db.js       ← MongoDB + in-memory DB
-│       ├── cricket.js  ← Cricket data + AI
-│       └── telegram.js ← Telegram message sender
-│
-├── api/cron/
-│   ├── daily.js        ← 9 AM daily broadcast
-│   ├── prematch.js     ← Pre-match alerts
-│   └── results.js      ← Result checker
-│
-├── vercel.json         ← Vercel config + cron jobs
-├── package.json        ← For Vercel deployment
-└── .env.example        ← Environment variables template
+└── api/
+    ├── predictions.js      ← GET /api/predictions — matches + win prob
+    ├── ai.js               ← POST /api/ai — AI analysis (GROQ_KEY server-side)
+    ├── telegram.js         ← POST /api/telegram — bot webhook
+    ├── setup.js            ← GET /api/setup — register webhook
+    │
+    ├── _lib/
+    │   ├── config.js       ← All env vars
+    │   ├── db.js           ← MongoDB + in-memory fallback
+    │   ├── cricket.js      ← Cricket data + AI
+    │   └── tg.js           ← Telegram sender
+    │
+    └── cron/
+        ├── daily.js        ← 9 AM broadcast (30 3 * * *)
+        ├── prematch.js     ← Pre-match alerts (*/30 * * * *)
+        └── results.js      ← Result checker (0 * * * *)
 ```
 
 ---
 
-## 🎯 Features
+## 🔒 Security Architecture
 
-### Frontend (index.html)
-- ✅ **Onboarding** — 3-screen animated intro
-- ✅ **Live Match List** — Real matches via CricketData API
-- ✅ **Win Probability Gauge** — SVG animated ring
-- ✅ **AI Analysis** — 7 tabs (Ball · Wicket · Score · Market · Momentum · Player · WhatIf)
-- ✅ **Ball-by-Ball Prediction** — Next 6 balls with probabilities
-- ✅ **LAGAI/KHAI Signals** — With exact odds
-- ✅ **Market Trap Detection** — Smart money alerts
-- ✅ **Momentum Meter** — Live team momentum tracking
-- ✅ **Recent Deliveries** — Ball-by-ball history
-- ✅ **AI Chatbot** — Match-specific Q&A
-- ✅ **Demo Mode** — Works without any API key!
-- ✅ **Auto Refresh** — Every 60 seconds
-
-### Telegram Bot
-- `/start` — Register + welcome
-- `/matches` — Today's matches
-- `/prediction` — AI prediction
-- `/accuracy` — Prediction accuracy
-- `/stats` — Total users + predictions
-- `/help` — All commands
-
----
-
-## 🔑 API Keys (All Free!)
-
-| API | Purpose | Free Tier |
-|-----|---------|-----------|
-| [CricAPI](https://cricapi.com) | Live cricket data | 100 req/day |
-| [Groq](https://console.groq.com) | AI analysis (Llama 3.3) | Generous free tier |
-| [The Odds API](https://the-odds-api.com) | Live odds | 500 req/month |
-| [Telegram BotFather](https://t.me/BotFather) | Bot token | Free |
-| [MongoDB Atlas](https://mongodb.com/atlas) | Database | 512MB free |
-
----
-
-## 🚀 Deploy on Vercel (Full Stack with Bot)
-
-### 1. Push to GitHub
-```bash
-git init
-git add .
-git commit -m "CricSense AI initial commit"
-git remote add origin https://github.com/yourusername/cricsense-ai.git
-git push -u origin main
+```
+Browser (index.html)
+      |
+      | /api/predictions  (no keys needed)
+      | /api/ai           (no keys needed)
+      ↓
+Vercel Serverless Functions
+      |
+      | GROQ_KEY (server only)
+      | CRICKET_KEY (server only)
+      | TELEGRAM_BOT_TOKEN (server only)
+      ↓
+External APIs (Groq, CricAPI, Telegram)
 ```
 
-### 2. Connect to Vercel
-- Go to [vercel.com](https://vercel.com) → New Project → Import your repo
-- Framework: **Other** (or Vite if using React build)
-
-### 3. Set Environment Variables in Vercel
-```
-VITE_GROQ_KEY         = gsk_xxxxxxxx
-VITE_CRICKET_KEY      = xxxxxxxx  
-VITE_ODDS_KEY         = xxxxxxxx
-TELEGRAM_BOT_TOKEN    = 1234567890:xxxxx
-TELEGRAM_GROUP_ID     = -1003807280474
-MONGODB_URI           = mongodb+srv://...
-CRON_SECRET           = your-random-secret
-```
-
-### 4. Register Telegram Webhook (ONE TIME)
-```
-https://your-app.vercel.app/api/setup?secret=your-random-secret
-```
-
-### 5. Setup Cron Jobs (Free at cron-job.org)
-```
-Daily:    https://your-app.vercel.app/api/cron/daily?secret=SECRET    → 9 AM IST (30 3 * * *)
-Prematch: https://your-app.vercel.app/api/cron/prematch?secret=SECRET → Every 30 min
-Results:  https://your-app.vercel.app/api/cron/results?secret=SECRET  → Every hour
-```
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Pure HTML + React (via CDN, no build!) |
-| Styling | CSS Variables + Inline Styles |
-| AI | Groq Llama 3.3-70B (3 model fallbacks) |
-| Cricket Data | CricAPI (cricapi.com) |
-| Backend | Vercel Serverless Functions |
-| Database | MongoDB Atlas + In-memory fallback |
-| Bot | Telegram Bot API |
-
----
-
-## 🔍 Troubleshooting
-
-**App not loading?**
-→ Check browser console for errors
-→ Make sure you're serving via HTTP (not file://)
-
-**No live matches?**
-→ CRICKET_KEY not set → Demo matches show automatically
-→ Free tier = 100 req/day, use demo mode to save quota
-
-**AI not working?**
-→ Add GROQ_KEY in CFG object in index.html
-→ AI has 3 model fallbacks + static fallback
-
-**Telegram bot not responding?**
-→ Run setup endpoint: `/api/setup?secret=YOUR_SECRET`
-→ Check TELEGRAM_BOT_TOKEN is correct in Vercel env vars
+Frontend mein **zero API keys** — sab kuch `/api/` endpoints ke through jaata hai.
 
 ---
 
@@ -171,20 +99,34 @@ Results:  https://your-app.vercel.app/api/cron/results?secret=SECRET  → Every 
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/telegram` | POST | Telegram webhook receiver |
-| `/api/predictions` | GET | All matches + AI predictions |
-| `/api/predictions?type=accuracy` | GET | Prediction accuracy stats |
+| `/api/predictions` | GET | Matches + win probability + AI predictions |
+| `/api/ai` | POST | AI tab analysis (Ball/Wicket/Score etc.) |
+| `/api/telegram` | POST | Telegram bot webhook |
 | `/api/setup?secret=...` | GET | Register Telegram webhook |
-| `/api/cron/daily?secret=...` | GET | Trigger daily broadcast |
-| `/api/cron/prematch?secret=...` | GET | Trigger pre-match alerts |
-| `/api/cron/results?secret=...` | GET | Check + broadcast results |
+| `/api/cron/daily?secret=...` | GET | Manual daily broadcast trigger |
+| `/api/cron/prematch?secret=...` | GET | Manual pre-match alert trigger |
+| `/api/cron/results?secret=...` | GET | Manual results check trigger |
 
 ---
 
-## ⚠️ Disclaimer
+## 🔍 Troubleshooting
 
-*CricSense AI is for entertainment purposes only. Not financial advice. 18+ only. Please gamble responsibly.*
+**App kholne pe koi match nahi dikh raha?**
+→ CRICKET_KEY Vercel env mein add hai? Redeploy kiya?
+→ Demo matches automatically dikhne chahiye
+
+**AI analysis kaam nahi kar raha?**
+→ GROQ_KEY check karo Vercel env mein
+→ 3 model fallbacks hain + static fallback bhi hai
+
+**Telegram bot reply nahi kar raha?**
+→ `/api/setup?secret=YOUR_SECRET` run karo
+→ TELEGRAM_BOT_TOKEN correct hai?
+
+**Cron jobs nahi chal rahe?**
+→ Vercel Pro chahiye for built-in crons
+→ Free alternative: [cron-job.org](https://cron-job.org) pe URLs add karo with `?secret=YOUR_SECRET`
 
 ---
 
-*Made with ❤️ for Indian cricket fans 🇮🇳*
+*⚠️ Entertainment only · 18+ · Responsible Gambling · India 🇮🇳*
