@@ -1,118 +1,74 @@
 import { config } from "./config.js";
 
-// ─── FETCH CURRENT MATCHES ────────────────────────────────────────────────────
-export async function getCurrentMatches() {
-  if (!config.cricketKey) return getDemoMatches();
+const DEMO = [
+  { id:"d1", name:"Lahore Qalandars vs Karachi Kings", matchType:"T20", status:"live",
+    venue:"Gaddafi Stadium, Lahore", series:"Pakistan Super League 2025",
+    teamInfo:[{name:"Lahore Qalandars"},{name:"Karachi Kings"}],
+    score:[{r:112,w:3,o:13.4}] },
+  { id:"d2", name:"India vs Australia", matchType:"ODI", status:"live",
+    venue:"Wankhede Stadium, Mumbai", series:"India vs Australia 2025",
+    teamInfo:[{name:"India"},{name:"Australia"}],
+    score:[{r:203,w:4,o:38.2}] },
+  { id:"d3", name:"Chennai Super Kings vs Mumbai Indians", matchType:"T20", status:"upcoming",
+    venue:"MA Chidambaram Stadium", series:"IPL 2025",
+    teamInfo:[{name:"Chennai Super Kings"},{name:"Mumbai Indians"}], score:[] },
+];
+
+export async function getMatches() {
+  if (!config.cricketKey) return DEMO;
   try {
-    const res = await fetch(
-      `https://api.cricapi.com/v1/currentMatches?apikey=${config.cricketKey}&offset=0`,
-      { headers: { "Content-Type": "application/json" } }
-    );
-    const data = await res.json();
-    if (data.status === "success" && data.data?.length > 0) {
-      return data.data.filter(m => m.name && m.status);
-    }
-  } catch (e) {
-    console.error("Cricket API error:", e.message);
-  }
-  return getDemoMatches();
+    const r = await fetch(`https://api.cricapi.com/v1/currentMatches?apikey=${config.cricketKey}&offset=0`);
+    const d = await r.json();
+    if (d.status === "success" && d.data?.length) return d.data;
+  } catch {}
+  return DEMO;
 }
 
-// ─── DEMO MATCHES ─────────────────────────────────────────────────────────────
-function getDemoMatches() {
-  return [
-    {
-      id: "demo-1",
-      name: "Lahore Qalandars vs Karachi Kings",
-      matchType: "T20",
-      status: "live",
-      venue: "Gaddafi Stadium, Lahore",
-      date: new Date().toISOString(),
-      teamInfo: [{ name: "Lahore Qalandars" }, { name: "Karachi Kings" }],
-      score: [{ r: 112, w: 3, o: 13.4, inning: "Lahore Qalandars Inning 1" }],
-      series: "Pakistan Super League 2025",
-    },
-    {
-      id: "demo-2",
-      name: "India vs Australia",
-      matchType: "ODI",
-      status: "live",
-      venue: "Wankhede Stadium, Mumbai",
-      date: new Date().toISOString(),
-      teamInfo: [{ name: "India" }, { name: "Australia" }],
-      score: [{ r: 203, w: 4, o: 38.2, inning: "India Inning 1" }],
-      series: "India vs Australia 2025",
-    },
-  ];
-}
-
-// ─── WIN PROBABILITY ─────────────────────────────────────────────────────────
-export function calcWinProb(match) {
-  const teams = match.name?.split(" vs ") || ["Team A", "Team B"];
-  const t1 = match.teamInfo?.[0]?.name || teams[0];
-  const t2 = match.teamInfo?.[1]?.name || teams[1];
-  const score = match.score?.[0];
-
-  if (!score) return { t1: 50, t2: 50, t1name: t1, t2name: t2 };
-
-  const { r, w, o } = score;
-  const totalOvers = match.matchType?.toUpperCase() === "T20" ? 20 : 50;
-  const remaining = totalOvers - o;
-  const rr = o > 0 ? r / o : 0;
-  const wicketsLeft = 10 - w;
-  const projected = r + (rr * remaining * (wicketsLeft / 10));
+export function calcProb(match) {
+  const t1 = match.teamInfo?.[0]?.name || match.name?.split(" vs ")?.[0] || "Team A";
+  const t2 = match.teamInfo?.[1]?.name || match.name?.split(" vs ")?.[1] || "Team B";
+  const s = match.score?.[0];
+  if (!s) return { t1: 50, t2: 50, t1n: t1, t2n: t2 };
+  const tot = match.matchType?.toUpperCase() === "T20" ? 20 : 50;
+  const rr = s.o > 0 ? s.r / s.o : 0;
+  const proj = s.r + rr * (tot - s.o) * ((10 - s.w) / 10);
   const par = match.matchType?.toUpperCase() === "T20" ? 165 : 280;
-  let p = 50 + ((projected - par) / par) * 30;
+  let p = 50 + ((proj - par) / par) * 30;
   p = Math.min(85, Math.max(15, p));
-
-  return { t1: Math.round(p), t2: Math.round(100 - p), t1name: t1, t2name: t2 };
+  return { t1: Math.round(p), t2: Math.round(100 - p), t1n: t1, t2n: t2 };
 }
 
-// ─── AI PREDICTION ────────────────────────────────────────────────────────────
-export async function generatePrediction(match) {
-  const prob = calcWinProb(match);
-  const teams = match.name?.split(" vs ") || ["Team A", "Team B"];
-  const t1 = match.teamInfo?.[0]?.name || teams[0];
-  const t2 = match.teamInfo?.[1]?.name || teams[1];
+const GROQ_MODELS = ["llama-3.3-70b-versatile", "llama3-70b-8192", "mixtral-8x7b-32768"];
 
-  // Try Groq AI
-  if (config.groqKey) {
+export async function groqAI(prompt) {
+  if (!config.groqKey) return null;
+  for (const model of GROQ_MODELS) {
     try {
-      const score = match.score?.[0];
-      const prompt = `Cricket match: ${match.name}. Format: ${match.matchType}. Series: ${match.series}.
-Current score: ${score ? `${score.r}/${score.w} in ${score.o} overs` : "Match not started"}.
-Win probability: ${t1}: ${prob.t1}%, ${t2}: ${prob.t2}%.
-
-Provide a brief AI prediction (3-4 lines) with: winner prediction, key factors, and confidence level. Hindi-English mix ok.`;
-
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${config.groqKey}`,
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          max_tokens: 300,
-          messages: [{ role: "user", content: prompt }],
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${config.groqKey}` },
+        body: JSON.stringify({ model, max_tokens: 600, temperature: 0.7, messages: [{ role: "user", content: prompt }] }),
       });
-      const d = await res.json();
+      if (!r.ok) continue;
+      const d = await r.json();
       const text = d.choices?.[0]?.message?.content || "";
-      if (text) return { text, confidence: prob.t1, winner: t1, prob };
-    } catch (e) {
-      console.error("Groq error:", e.message);
-    }
+      if (text) return text;
+    } catch {}
   }
+  return null;
+}
 
-  // Fallback
+export async function getPrediction(match) {
+  const prob = calcProb(match);
+  const t1 = prob.t1n, t2 = prob.t2n;
+  const score = match.score?.[0];
+  const scoreStr = score ? `${score.r}/${score.w} in ${score.o} overs` : "Match not started";
+  const prompt = `Cricket match: ${match.name}. Format: ${match.matchType}. Score: ${scoreStr}. Win prob: ${t1} ${prob.t1}%, ${t2} ${prob.t2}%.\nGive brief prediction (3-4 lines): winner, key factors, confidence. Mix Hindi-English.`;
+  const ai = await groqAI(prompt);
   const winner = prob.t1 > prob.t2 ? t1 : t2;
   const confidence = Math.max(prob.t1, prob.t2);
   return {
-    text: `🎯 AI Prediction: ${winner} has ${confidence}% win probability. Based on current match dynamics, ${winner} has the edge. Watch for momentum shifts in the next 3 overs.`,
-    confidence,
-    winner,
-    prob,
+    text: ai || `🎯 AI Prediction: ${winner} has ${confidence}% win probability. Current match dynamics favor ${winner}. Watch for momentum shifts.`,
+    winner, confidence, prob,
   };
 }
-
