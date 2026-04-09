@@ -2,454 +2,809 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>CricSense AI — India's #1 Cricket Intelligence</title>
-<meta name="description" content="AI-powered cricket predictions, live analysis & smart signals"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet"/>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<meta name="theme-color" content="#070d18"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏏</text></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZGT8H9CHJ1"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-ZGT8H9CHJ1');</script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#050a0f;--bg2:#0a1520;--bg3:#0f1e2e;
-  --accent:#00e5ff;--accent2:#ff6b35;--accent3:#39ff14;
-  --gold:#ffd700;--red:#ff3b30;--green:#34c759;
-  --text:#e8f4f8;--text2:#7ca9c0;
-  --border:rgba(0,229,255,0.15);--card:rgba(10,21,32,0.95);
-  --fh:'Exo 2',sans-serif;--fm:'Space Mono',monospace;--fb:'Rajdhani',sans-serif;
-}
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:16px;line-height:1.5;min-height:100vh;overflow-x:hidden}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
-button{cursor:pointer;border:none;outline:none;font-family:inherit;background:none}
-input,textarea{font-family:inherit;outline:none;border:none}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-@keyframes slide-in{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes fade-in{from{opacity:0}to{opacity:1}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.anim-slide{animation:slide-in .4s ease both}
-.anim-fade{animation:fade-in .5s ease both}
-.anim-float{animation:float 3s ease-in-out infinite}
-.spinning{animation:spin 1s linear infinite}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;padding:0;background:#070d18;color:#f1f5f9;font-family:'IBM Plex Mono',monospace;-webkit-font-smoothing:antialiased;min-height:100vh}
+::-webkit-scrollbar{display:none}
+*{-ms-overflow-style:none;scrollbar-width:none}
+.page{background:linear-gradient(150deg,#070d18 0%,#0a1628 50%,#070d18 100%);min-height:100vh}
+.card{background:rgba(15,23,42,0.8);border:1px solid rgba(51,65,85,0.45);border-radius:16px;padding:16px;margin-bottom:12px}
+.nav{position:sticky;top:0;z-index:40;background:rgba(7,13,24,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(51,65,85,0.4);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:40px;height:40px;border-radius:11px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);display:flex;align-items:center;justify-content:center;font-size:20px}
+.logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin:0}
+.logo-sub{font-size:10px;color:#64748b;margin:0}
+.em{color:#10b981}.vi{color:#8b5cf6}.re{color:#ef4444}.am{color:#f59e0b}.sk{color:#38bdf8}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:3px 9px;font-size:11px;font-weight:700}
+.btn{border:none;border-radius:99px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'IBM Plex Mono',monospace}
+.btn-em{background:#10b981;color:#fff}
+.btn-vi{background:#8b5cf6;color:#fff}
+.btn-gr{background:rgba(51,65,85,0.6);color:#f1f5f9;border:1px solid rgba(51,65,85,0.5)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat-card{background:rgba(15,23,42,0.8);border:1px solid rgba(51,65,85,0.45);border-radius:12px;padding:9px 6px;text-align:center}
+.stat-icon{font-size:15px;margin-bottom:2px}
+.stat-val{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin:0 0 1px}
+.stat-lbl{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em}
+.tab-bar{display:flex;gap:4px;margin-bottom:14px;padding:4px;background:rgba(15,23,42,0.6);border:1px solid rgba(51,65,85,0.4);border-radius:14px;overflow-x:auto}
+.tab-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 7px;border-radius:11px;border:none;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Mono',monospace;white-space:nowrap;background:none;transition:all 0.2s}
+.tab-btn.active{background:rgba(51,65,85,0.8);color:#f1f5f9}
+.tab-count{background:rgba(51,65,85,0.5);color:#64748b;font-size:10px;padding:1px 5px;border-radius:99px;font-weight:700}
+.tab-btn.active .tab-count{background:rgba(71,85,105,0.8);color:#cbd5e1}
+.match-card{background:rgba(15,23,42,0.8);border:1px solid rgba(51,65,85,0.45);border-radius:16px;padding:16px;margin-bottom:12px;cursor:pointer;transition:border-color 0.2s;animation:fadeUp 0.35s ease both}
+.match-card:hover{border-color:rgba(71,85,105,0.7)}
+.match-card.live{border-color:rgba(239,68,68,0.2)}
+.match-teams{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.team-name{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin:0}
+.team-score{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#10b981;margin:0}
+.odds-row{display:flex;gap:7px}
+.odds-box{flex:1;background:rgba(15,23,42,0.8);border:1px solid rgba(51,65,85,0.5);border-radius:10px;padding:7px 6px;text-align:center}
+.odds-team{font-size:10px;color:#64748b;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.odds-val{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:#10b981}
+.odds-pct{font-size:10px;color:#64748b}
+.prob-bar-wrap{margin-bottom:10px}
+.prob-row{display:flex;justify-content:space-between;margin-bottom:5px}
+.prob-team{font-size:11px;color:#94a3b8}
+.prob-pct{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700}
+.prob-track{height:10px;border-radius:99px;background:rgba(30,41,59,0.8);overflow:hidden;position:relative}
+.prob-fill{height:100%;border-radius:99px;transition:width 1s}
+.balls-row{display:flex;align-items:center;gap:5px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(51,65,85,0.4)}
+.ball{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+.ai-tabs{display:flex;overflow-x:auto;gap:3px;padding:11px;border-bottom:1px solid rgba(51,65,85,0.4)}
+.ai-tab{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:9px;border:none;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;font-family:'IBM Plex Mono',monospace;white-space:nowrap;background:none;transition:all 0.2s}
+.ai-tab.active{background:rgba(51,65,85,0.8);color:#f1f5f9}
+.section-lbl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;display:block;font-weight:700}
+.bar-track{height:8px;border-radius:99px;background:rgba(30,41,59,0.8);overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width 1s}
+.ball-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px}
+.ball-col{display:flex;flex-direction:column;align-items:center;gap:3px}
+.ball-num{font-size:9px;color:#64748b}
+.ball-circle{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+.ball-lbl{font-size:10px;color:#cbd5e1;text-align:center;line-height:1.2}
+.ball-conf{font-size:9px;color:#64748b}
+.tip-card{border-radius:16px;padding:16px;margin-bottom:12px}
+.insight-card{background:rgba(15,23,42,0.8);border:1px solid rgba(51,65,85,0.4);border-radius:14px;padding:14px;margin-bottom:12px}
+.wicket-ring{display:flex;justify-content:center;margin-bottom:10px}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:100;color:#fff;padding:9px 18px;border-radius:14px;font-size:13px;font-weight:600;max-width:85vw;text-align:center;animation:fadeDown 0.3s ease;box-shadow:0 8px 32px rgba(0,0,0,0.4);font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.chat-btn{position:fixed;bottom:24px;right:16px;z-index:50;display:flex;align-items:center;gap:9px;padding:12px 14px 12px 12px;border-radius:99px;background:linear-gradient(to right,#8b5cf6,#7c3aed);border:1px solid rgba(139,92,246,0.5);box-shadow:0 8px 32px rgba(0,0,0,0.4);cursor:pointer;animation:pulse 3s infinite}
+.chat-panel{position:fixed;bottom:0;right:0;left:0;z-index:50;height:min(560px,82vh);display:flex;flex-direction:column;background:linear-gradient(150deg,#0d1628,#0f1e35);box-shadow:0 -8px 40px rgba(0,0,0,0.6);border-radius:20px 20px 0 0;border:1px solid rgba(139,92,246,0.3)}
+.chat-header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(51,65,85,0.4);flex-shrink:0}
+.chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px}
+.chat-msg{display:flex;align-items:flex-end;gap:7px}
+.chat-msg.user{justify-content:flex-end}
+.msg-bubble{max-width:85%;border-radius:14px;padding:9px 13px;font-size:13px;line-height:1.5}
+.msg-bubble.ai{background:rgba(30,41,59,0.8);border:1px solid rgba(51,65,85,0.4);color:#cbd5e1;border-bottom-left-radius:3px}
+.msg-bubble.user{background:rgba(139,92,246,0.5);border:1px solid rgba(139,92,246,0.4);color:#f1f5f9;border-bottom-right-radius:3px}
+.chat-input-wrap{padding:7px 12px 14px;border-top:1px solid rgba(51,65,85,0.4);flex-shrink:0}
+.chat-input-row{display:flex;gap:7px;background:rgba(30,41,59,0.6);border:1px solid rgba(51,65,85,0.5);border-radius:18px;padding:5px 5px 5px 13px}
+.chat-input{flex:1;background:none;border:none;color:#f1f5f9;font-size:16px;font-family:'IBM Plex Mono',monospace;outline:none}
+.chat-send{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s}
+.sugg-row{padding:0 12px 7px;display:flex;gap:6px;overflow-x:auto;flex-shrink:0}
+.sugg-btn{flex-shrink:0;background:rgba(30,41,59,0.8);border:1px solid rgba(139,92,246,0.25);border-radius:99px;padding:6px 11px;color:#cbd5e1;font-size:11px;cursor:pointer;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.onboard{min-height:100vh;background:linear-gradient(150deg,#070d18,#0a1628,#070d18);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
+.onboard-card{width:100%;max-width:360px}
+.dots{display:flex;justify-content:center;gap:6px;margin-bottom:14px}
+.dot{height:6px;border-radius:99px;transition:all 0.3s}
+.error-bar{background:rgba(146,64,14,0.12);border:1px solid rgba(146,64,14,0.3);border-radius:11px;padding:9px 14px;font-size:13px;color:#f59e0b;margin-bottom:11px}
+.skel{animation:pulse 1.5s infinite}
+.skel-line{border-radius:99px;background:rgba(51,65,85,0.4);margin-bottom:11px}
+.score-boxes{display:flex;gap:8px;margin-bottom:10px}
+.score-box{flex:1;border-radius:12px;padding:10px 6px;text-align:center}
+.input-field{background:rgba(30,41,59,0.8);border:1px solid rgba(51,65,85,0.5);border-radius:12px;padding:10px 14px;color:#f1f5f9;font-size:16px;font-family:'IBM Plex Mono',monospace;outline:none;width:100%;box-sizing:border-box}
+.whatif-presets{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.whatif-btn{background:rgba(15,23,42,0.6);border:1px solid rgba(245,158,11,0.2);border-radius:99px;padding:6px 11px;color:#f59e0b;font-size:11px;cursor:pointer;font-family:'IBM Plex Mono',monospace}
+.bookmaker-row{background:rgba(15,23,42,0.6);border:1px solid rgba(51,65,85,0.4);border-radius:10px;padding:10px 12px;margin-bottom:7px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block;animation:pulse 1s infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const {useState,useEffect,useCallback}=React;
+<div id="app"><div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-size:40px">🏏</div></div>
 
-// ══════════════════════════════════════════════════
-// COLORS
-// ══════════════════════════════════════════════════
-const C={
-  bg:"#050a0f",bg2:"#0a1520",bg3:"#0f1e2e",
-  accent:"#00e5ff",accent2:"#ff6b35",accent3:"#39ff14",
-  gold:"#ffd700",red:"#ff3b30",green:"#34c759",
-  text:"#e8f4f8",text2:"#7ca9c0",
-  border:"rgba(0,229,255,0.15)",card:"rgba(10,21,32,0.95)",
+<script>
+// ── Config ────────────────────────────────────────────────────
+const GROQ_KEY    = "gsk_B1Cf0p5xpWTrMPNAVmgvWGdyb3FYVaHuDdFfOJ87vGOlmHt8hOI";
+const CRICKET_KEY = "fkmXCq7O4Q2E71rRh6oGE9k9Bpf9oFMH8BxJBQHX9";
+const AD_LINK     = "https://www.profitablecpmratenetwork.com/m30hqiwh5s?key=714e24c840b9b9e56b7f94fb5a900e67";
+
+// ── State ─────────────────────────────────────────────────────
+let S = {
+  screen: localStorage.getItem("cs_ob") ? "home" : "onboard",
+  onbStep: 0, onbFeat: 0,
+  tab: "live",
+  matches: [], loading: false, err: "",
+  selected: null,
+  aiPhase: "idle", ai: null, aiTab: "ball", aiErr: "",
+  chatOpen: false, chatMsgs: {}, chatInput: "", chatLoading: false,
+  toast: null,
+  lastFetch: null,
 };
 
-// ══════════════════════════════════════════════════
-// API CALLS — All go to /api/ (backend handles keys)
-// ══════════════════════════════════════════════════
-async function apiGet(path){
-  const r=await fetch(path);
-  if(!r.ok) throw new Error(`API error ${r.status}`);
-  return r.json();
-}
-async function apiPost(path,body){
-  const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
-  if(!r.ok) throw new Error(`API error ${r.status}`);
-  return r.json();
-}
+const track = (a,c,l)=>{try{if(window.gtag)window.gtag("event",a,{event_category:c,event_label:l||""});}catch{}};
 
+// ── Demo data ─────────────────────────────────────────────────
+const DEMO = [
+  {id:"d1",demo:true,fmt:"T20",league:"Pakistan Super League 2025",time:new Date(Date.now()+900000).toISOString(),home:"Lahore Qalandars",away:"Karachi Kings",status:"live",
+   bk:[{t:"Betfair",odds:[{n:"Lahore Qalandars",p:1.72},{n:"Karachi Kings",p:2.20}]},{t:"Bet365",odds:[{n:"Lahore Qalandars",p:1.75},{n:"Karachi Kings",p:2.15}]}],
+   live:{team:"Lahore Qalandars",score:"112/3",ov:"13.4",rr:"8.20",target:null,rrr:null,lastW:"Fakhar Zaman c Ali b Nortje 42",balls:["1","0","0","4","W","0"],wkts:3,dots:8,pressure:72,
+     bat:[{n:"Babar Azam",r:34,b:28,sr:121.4,rec:["4","1","0","0","2","1"],s:true},{n:"Sikandar Raza",r:12,b:14,sr:85.7,rec:["0","0","1","0","2","0"],s:false}],
+     bowler:{n:"Nortje",spell:"2.4-0-18-1",eco:6.75,type:"Fast"},
+     overs:[{o:1,r:8,w:0},{o:2,r:12,w:0},{o:3,r:6,w:1},{o:4,r:10,w:0},{o:5,r:14,w:0},{o:6,r:9,w:1},{o:7,r:7,w:0},{o:8,r:11,w:0},{o:9,r:8,w:0},{o:10,r:13,w:0},{o:11,r:6,w:1},{o:12,r:9,w:0},{o:13,r:8,w:0},{o:14,r:4,w:0}]}},
+  {id:"d2",demo:true,fmt:"ODI",league:"India vs Australia 2025",time:new Date(Date.now()+7200000).toISOString(),home:"India",away:"Australia",status:"live",
+   bk:[{t:"Betfair",odds:[{n:"India",p:1.65},{n:"Australia",p:2.30}]}],
+   live:{team:"India",score:"203/4",ov:"38.2",rr:"5.29",target:287,rrr:"8.52",lastW:"Kohli b Hazlewood 71",balls:["0","0","W","4","6","0"],wkts:4,dots:14,pressure:85,
+     bat:[{n:"Hardik Pandya",r:28,b:22,sr:127.3,rec:["0","4","6","1","0","0"],s:true},{n:"Jadeja",r:8,b:12,sr:66.7,rec:["0","0","1","0","2","0"],s:false}],
+     bowler:{n:"Hazlewood",spell:"8-1-38-2",eco:4.75,type:"Fast-Medium"},
+     overs:[{o:5,r:9,w:0},{o:10,r:11,w:1},{o:15,r:7,w:0},{o:20,r:8,w:1},{o:25,r:12,w:0},{o:30,r:5,w:1},{o:35,r:10,w:0},{o:38,r:4,w:1}]}},
+  {id:"d3",demo:true,fmt:"T20",league:"IPL 2025",time:new Date(Date.now()+18000000).toISOString(),home:"Mumbai Indians",away:"Chennai Super Kings",status:"upcoming",
+   bk:[{t:"Betfair",odds:[{n:"Mumbai Indians",p:1.95},{n:"Chennai Super Kings",p:1.95}]}],live:null},
+];
+
+// ── Helpers ───────────────────────────────────────────────────
+const ip = o => o>0 ? +((1/o*100).toFixed(1)) : 0;
+function getBest(bk){const b={};for(const x of bk)for(const o of x.odds)if(!b[o.n]||o.p>b[o.n])b[o.n]=o.p;return b;}
+function winProb(m){
+  if(!m.live?.score)return null;
+  const ov=parseFloat(m.live.ov||0),tot=m.fmt==="T20"?20:50,wL=10-(m.live.wkts||0),rr=parseFloat(m.live.rr||0);
+  if(m.live.target){const rrr=parseFloat(m.live.rrr||0),gap=rrr-rr;let s=50-gap*8+wL*3-(m.live.dots||0)*1.5;return{a:Math.round(Math.max(10,Math.min(90,s))),b:Math.round(100-Math.max(10,Math.min(90,s)))};}
+  let s=40+(rr-7)*5+(wL-5)*4;return{a:Math.round(Math.max(30,Math.min(80,s))),b:Math.round(100-Math.max(30,Math.min(80,s)))};
+}
+function countdown(to){
+  const d=new Date(to)-Date.now();if(d<=0)return"Shuru!";
+  const h=Math.floor(d/3600000),m=Math.floor((d%3600000)/60000),s=Math.floor((d%60000)/1000);
+  return h>0?`${h}h ${m}m`:m>0?`${m}m ${s}s`:`${s}s`;
+}
+function ballBg(b){return b==="W"?"#dc2626":b==="6"?"#059669":b==="4"?"#0284c7":"rgba(51,65,85,0.8)";}
+function ballIcon(b){return b==="WICKET"||b==="W"?"🎯":b==="SIX"||b==="6"?"💥":b==="FOUR"||b==="4"?"⚡":b==="DOT"||b==="0"?"🛡️":"📈";}
+function fmtColor(f){return f==="T20"?"#8b5cf6":f==="ODI"?"#38bdf8":"#f59e0b";}
+function probColor(p){return p>=60?"#10b981":p>=50?"#f59e0b":"#ef4444";}
+
+// ── API ───────────────────────────────────────────────────────
 async function fetchMatches(){
-  try{ const d=await apiGet("/api/predictions"); return d.data||[]; }
-  catch{ return []; }
+  if(!CRICKET_KEY)return[];
+  const PROXY="https://api.allorigins.win/get?url=";
+  for(const url of[`https://api.cricapi.com/v1/currentMatches?apikey=${CRICKET_KEY}&offset=0`,`https://api.cricapi.com/v1/matches?apikey=${CRICKET_KEY}&offset=0`]){
+    try{
+      let data=null;
+      try{const r=await fetch(url,{signal:AbortSignal.timeout(6000)});if(r.ok)data=await r.json();}catch{}
+      if(!data){try{const r=await fetch(PROXY+encodeURIComponent(url));if(r.ok){const b=await r.json();data=JSON.parse(b.contents);}}catch{}}
+      if(data?.status==="success"&&Array.isArray(data.data)){
+        const seen=new Set();
+        return data.data.filter(m=>m.teams?.length>=2&&!m.matchEnded).filter(m=>{if(seen.has(m.id))return false;seen.add(m.id);return true;}).map(m=>{
+          const t=m.teams||[],sa=m.score||[],bat=sa[sa.length-1]||null;
+          const runs=bat?.r??0,wkts=bat?.w??0,ov=parseFloat(bat?.o||0);
+          const rr=ov>0?(runs/ov).toFixed(2):"0.00",tot=m.t20?20:m.odi?50:90;
+          const tgt=sa.length>=2?sa[0].r+1:null,rrr=(tgt&&(tot-ov)>0)?((tgt-runs)/(tot-ov)).toFixed(2):null;
+          const nm=(m.name||"").toLowerCase(),fmt=nm.includes("t20")?"T20":nm.includes("odi")?"ODI":nm.includes("test")?"Test":"T20";
+          const isLive=m.matchStarted&&!m.matchEnded;
+          return{id:m.id,fmt,league:(m.seriesName||m.name||"International").slice(0,50),time:m.dateTimeGMT||new Date().toISOString(),home:t[0],away:t[1],status:isLive?"live":"upcoming",bk:[{t:"CricSense",odds:[{n:t[0],p:1.80},{n:t[1],p:2.05}]}],live:isLive&&bat?{team:bat.inning?.split(" Inning")[0]||t[0],score:`${runs}/${wkts}`,ov:String(ov),rr,target:tgt,rrr,lastW:m.status||null,balls:[],wkts,dots:5,pressure:Math.min(95,wkts*12+30),bat:[],bowler:null,overs:[]}:null};
+        }).slice(0,15);
+      }
+    }catch{}
+  }
+  return[];
 }
-async function fetchAI(matchId,tab,message){
+
+async function callAI(messages,maxTok=1000,temp=0.2){
+  try{const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:maxTok,messages:messages.map(m=>({role:m.role==="system"?"user":m.role,content:m.content}))})});if(r.ok){const d=await r.json();const t=d.content?.map(x=>x.text||"").join("");if(t)return t.trim();}}catch{}
+  try{const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${GROQ_KEY}`},body:JSON.stringify({model:"llama-3.3-70b-versatile",max_tokens:maxTok,temperature:temp,messages})});if(r.ok)return(await r.json()).choices?.[0]?.message?.content?.trim()||"";}catch{}
+  try{const r=await fetch("https://corsproxy.io/?"+encodeURIComponent("https://api.groq.com/openai/v1/chat/completions"),{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${GROQ_KEY}`},body:JSON.stringify({model:"llama-3.3-70b-versatile",max_tokens:maxTok,temperature:temp,messages})});if(r.ok)return(await r.json()).choices?.[0]?.message?.content?.trim()||"";}catch{}
+  throw new Error("AI se connect nahi ho paya — refresh karo");
+}
+
+async function doAnalyze(match){
+  const bo=getBest(match.bk);
+  const L=match.live,isPre=!L?.score;
+  const oddsStr=Object.entries(bo).map(([n,p])=>`${n}: ${p} (${ip(p)}%)`).join(" | ");
+  const ctx=isPre?"PRE-MATCH":[`${L.team} ${L.score} (${L.ov}ov) CRR:${L.rr}`,L.target?`Target:${L.target} RRR:${L.rrr}`:"",`Balls:${(L.balls||[]).join("-")} Pressure:${L.pressure}% Wkts:${L.wkts}`].filter(Boolean).join(" | ");
+  const prompt=`CricSense AI. Hinglish. JSON only no markdown.\nMATCH: ${match.home} vs ${match.away} | ${match.fmt} | ${match.league}\n${ctx} | ODDS: ${oddsStr}\n${isPre?"PRE-MATCH: form+odds":"WICKET: dots*4+wkts*15+(RRR-CRR)*5 >70=IMMINENT"}\n{"win_probability":{"${match.home}":<n>,"${match.away}":<n>},"decision":"SAFE BET"|"SMALL BET"|"NO BET","favored_team":"<t>","reason":"<Hinglish>","confidence":<n>,"risk_level":"low"|"medium"|"high","next_6_balls":["WICKET"|"SIX"|"FOUR"|"DOT"|"RUN","","","","",""],"next_6_confidence":[<n>,<n>,<n>,<n>,<n>,<n>],"wicket_imminent":<bool>,"wicket_probability":<n>,"wicket_in_balls":"<2-5>","wicket_reason":"<Hinglish>","wicket_type":"BOWLED"|"CAUGHT"|"LBW","score_projection":{"min":<n>,"max":<n>,"likely":<n>,"note":"<Hinglish>"},"momentum":{"current":"<t>"|"BALANCED","reason":"<Hinglish>"},"team_tip":{"action":"LAGAI"|"KHAI"|"WAIT","team":"<t>","entry_price":"<odds>","note":"<Hinglish>"},"key_insight":"<WOW>","market_trap":{"detected":<bool>,"detail":"<Hinglish>","action":"<Hinglish>"},"session_bets":[{"label":"<Over>","prediction":"<runs>","confidence":<n>}],"smart_alert":null|"<urgent>"}`;
+  const raw=await callAI([{role:"user",content:prompt}]);
+  try{return JSON.parse(raw.replace(/```json|```/g,"").trim());}
+  catch{return{win_probability:{[match.home]:50,[match.away]:50},decision:"NO BET",favored_team:null,reason:"Parse error",confidence:0,risk_level:"high",wicket_imminent:false,wicket_probability:0,score_projection:null,momentum:{current:"BALANCED"},team_tip:null,key_insight:"",market_trap:{detected:false},session_bets:[],smart_alert:null,next_6_balls:[],next_6_confidence:[]};}
+}
+
+// ── Adsterra ─────────────────────────────────────────────────
+(function(){
+  if(!document.getElementById("cs-p")){const s=document.createElement("script");s.id="cs-p";s.src="https://pl29041200.profitablecpmratenetwork.com/1f/fb/22/1ffb222f53f5792c60c61093a928e88b.js";s.async=true;document.head.appendChild(s);}
+  if(!document.getElementById("cs-b")){const s=document.createElement("script");s.id="cs-b";s.src="https://pl29041201.profitablecpmratenetwork.com/15/6a/9a/156a9a401fddcdb0b8a72f51dd415116.js";s.async=true;document.body.appendChild(s);}
+})();
+
+// ── Render engine ─────────────────────────────────────────────
+function el(tag,cls,attrs,children){
+  const e=document.createElement(tag);
+  if(cls)e.className=cls;
+  if(attrs)for(const[k,v]of Object.entries(attrs)){
+    if(k==="style"&&typeof v==="object")Object.assign(e.style,v);
+    else if(k.startsWith("on"))e.addEventListener(k.slice(2).toLowerCase(),v);
+    else e.setAttribute(k,v);
+  }
+  if(children){
+    if(typeof children==="string")e.innerHTML=children;
+    else if(Array.isArray(children))children.flat().forEach(c=>{if(c instanceof Node)e.appendChild(c);else if(c!=null&&c!==false)e.appendChild(document.createTextNode(String(c)));});
+    else if(children instanceof Node)e.appendChild(children);
+  }
+  return e;
+}
+const div=(cls,a,ch)=>el("div",cls,a,ch);
+const p=(cls,a,ch)=>el("p",cls,a,ch);
+const span=(cls,a,ch)=>el("span",cls,a,ch);
+const btn=(cls,a,ch)=>el("button",cls,a,ch);
+const inp=(cls,a)=>el("input",cls,a);
+const a=(cls,attrs,ch)=>el("a",cls,attrs,ch);
+
+function showToast(msg,type="info"){
+  const bg=type==="success"?"#047857":type==="bet"?"#5b21b6":type==="danger"?"#b91c1c":"#334155";
+  const t=el("div","toast",{style:{background:bg}},msg);
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+function render(){
+  const root=document.getElementById("app");
+  root.innerHTML="";
+  root.appendChild(buildScreen());
+}
+
+// ── Screens ───────────────────────────────────────────────────
+function buildScreen(){
+  if(S.screen==="onboard")return buildOnboard();
+  if(S.screen==="detail")return buildDetail();
+  return buildHome();
+}
+
+// ONBOARD
+const FEATS=[
+  {i:"🎯",t:"Ball-by-Ball Prediction",d:"Agle 6 balls predict — Wicket, Six, Four, Dot, Run. Confidence % ke saath.",col:"#ef4444"},
+  {i:"📊",t:"Win Probability Gauge",d:"Live animated gauge — RRR vs CRR aur wickets calculate hoti hai.",col:"#8b5cf6"},
+  {i:"🪤",t:"Market Trap Detection",d:"Smart money detect karo. AI odds movement track karta hai.",col:"#f59e0b"},
+  {i:"⚡",t:"LAGAI / KHAI Signal",d:"Exact entry price ke saath signal. No confusion.",col:"#10b981"},
+  {i:"🤖",t:"AI Chatbot",d:"Match expert se baat karo. What-if scenarios bhi.",col:"#38bdf8"},
+];
+function buildOnboard(){
+  const wrap=div("onboard");
+  // Logo
+  const logo=div("",{style:{textAlign:"center",marginBottom:"32px"}},[
+    div("",{style:{width:"80px",height:"80px",borderRadius:"24px",background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"36px",margin:"0 auto 14px"}},"🏏"),
+    el("h1","",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"30px",margin:"0 0 4px",color:"#f1f5f9"}},["Cric",span("em",null,"Sense"),span("vi",null," AI")]),
+    p("",{style:{color:"#94a3b8",fontSize:"13px",margin:0}},"India's #1 Cricket Intelligence"),
+  ]);
+  wrap.appendChild(logo);
+  const card=div("onboard-card");
+  if(S.onbStep===0){
+    const c=div("card",{style:{marginBottom:"14px"}});
+    c.appendChild(p("",{style:{color:"#cbd5e1",fontSize:"14px",lineHeight:"1.6",marginTop:0}},["Yeh tool ",el("strong","em",null,"smart punters")," ke liye hai — ",el("em","vi",null,"data pe based betting.")]));
+    FEATS.forEach(f=>{const row=div("",{style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"9px"}},[span("",{style:{fontSize:"18px"}},f.i),span("",{style:{color:"#cbd5e1",fontSize:"13px"}},f.t)]);c.appendChild(row);});
+    card.appendChild(c);
+    const b=btn("btn",{style:{background:"linear-gradient(to right,#10b981,#059669)",color:"#fff",width:"100%",padding:"14px",fontSize:"14px",borderRadius:"14px",fontFamily:"'IBM Plex Mono',monospace"},onClick:()=>{S.onbStep=1;render();}},"Dekhte Hain Kaise Kaam Karta Hai →");
+    card.appendChild(b);
+    card.appendChild(p("",{style:{textAlign:"center",fontSize:"11px",color:"#334155",marginTop:"10px"}},"Free · 18+ · Responsible gambling"));
+  } else if(S.onbStep===1){
+    const f=FEATS[S.onbFeat];
+    const fc=div("card",{style:{minHeight:"180px",display:"flex",flexDirection:"column",justifyContent:"center",marginBottom:"12px"}},[
+      div("",{style:{fontSize:"40px",marginBottom:"12px"}},f.i),
+      el("h3","",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"17px",color:f.col,margin:"0 0 8px"}},f.t),
+      p("",{style:{color:"#cbd5e1",fontSize:"13px",lineHeight:"1.6",margin:0}},f.d),
+    ]);
+    card.appendChild(fc);
+    const dots=div("dots");
+    FEATS.forEach((_,i)=>{const d=div("dot",{style:{width:i===S.onbFeat?"24px":"8px",background:i===S.onbFeat?"#10b981":"rgba(51,65,85,0.8)"}});dots.appendChild(d);});
+    card.appendChild(dots);
+    card.appendChild(btn("btn",{style:{background:"linear-gradient(to right,#8b5cf6,#7c3aed)",color:"#fff",width:"100%",padding:"14px",fontSize:"14px",borderRadius:"14px",fontFamily:"'IBM Plex Mono',monospace"},onClick:()=>{S.onbStep=2;render();}},"Aage →"));
+    // auto-cycle
+    if(!S._featTimer)S._featTimer=setInterval(()=>{S.onbFeat=(S.onbFeat+1)%FEATS.length;render();},2500);
+  } else {
+    clearInterval(S._featTimer);S._featTimer=null;
+    const c=div("card",{style:{marginBottom:"14px",textAlign:"center"}});
+    c.appendChild(div("",{style:{fontSize:"40px",marginBottom:"10px"}},"🔔"));
+    c.appendChild(el("h3","",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"17px",margin:"0 0 6px",color:"#f1f5f9"}},"Smart Alerts Enable Karo"));
+    c.appendChild(p("",{style:{color:"#94a3b8",fontSize:"13px",margin:"0 0 14px"}},"Wicket girne se pehle · Safe bet pe · Market trap pe"));
+    ["🎯 Wicket Imminent","✅ Safe Bet Signal","🪤 Market Trap","⚡ Turning Point"].forEach(t=>{
+      c.appendChild(div("",{style:{display:"flex",alignItems:"center",gap:"10px",background:"rgba(15,23,42,0.6)",borderRadius:"10px",padding:"8px 12px",marginBottom:"7px",textAlign:"left"}},[span("",{style:{fontSize:"16px"}},t.split(" ")[0]),span("",{style:{color:"#cbd5e1",fontSize:"13px"}},t.split(" ").slice(1).join(" "))]));
+    });
+    card.appendChild(c);
+    card.appendChild(btn("btn",{style:{background:"linear-gradient(to right,#10b981,#8b5cf6)",color:"#fff",width:"100%",padding:"14px",fontSize:"14px",borderRadius:"14px",fontFamily:"'IBM Plex Mono',monospace",marginBottom:"8px"},onClick:async()=>{if("Notification"in window)await Notification.requestPermission();track("onboarding_complete","Engagement");localStorage.setItem("cs_ob","1");S.screen="home";S.loading=true;render();loadData();}},"🔔 Notifications On · App Kholein"));
+    card.appendChild(btn("",{style:{width:"100%",background:"none",border:"none",color:"#64748b",fontSize:"13px",padding:"8px",cursor:"pointer",fontFamily:"'IBM Plex Mono',monospace"},onClick:()=>{localStorage.setItem("cs_ob","1");S.screen="home";S.loading=true;render();loadData();}},"Skip karo"));
+  }
+  wrap.appendChild(card);
+  return wrap;
+}
+
+// HOME
+function buildHome(){
+  const page=div("page");
+  // Nav
+  const nav=div("nav");
+  nav.appendChild(div("nav-logo",[
+    div("logo-icon","🏏"),
+    div("",[
+      p("logo-text",null,["Cric",span("em",null,"Sense"),span("vi",null," AI")]),
+      p("logo-sub",null,"India's #1 Cricket Intelligence"),
+    ]),
+  ]));
+  const refreshBtn=btn("",{style:{width:"36px",height:"36px",borderRadius:"50%",border:"1px solid rgba(51,65,85,0.45)",background:"rgba(15,23,42,0.6)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",opacity:S.loading?"0.4":"1"},onClick:()=>{if(!S.loading)loadData();}},
+    S.loading?"⏳":"🔄");
+  nav.appendChild(refreshBtn);
+  page.appendChild(nav);
+
+  const main=div("",{style:{maxWidth:"600px",margin:"0 auto",padding:"14px 15px 100px"}});
+
+  // Stats
+  const sg=div("stats-grid");
+  const liveM=getMatches("live"),upM=getMatches("upcoming");
+  [{l:"Live",v:liveM.length,col:"#ef4444",i:"🔴"},{l:"Upcoming",v:upM.length,col:"#f59e0b",i:"⏰"},{l:"AI",v:"Claude",col:"#8b5cf6",i:"🧠"},{l:"Updated",v:S.lastFetch?S.lastFetch.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}):"—",col:"#38bdf8",i:"🔄"}].forEach(s=>{
+    const sc=div("stat-card");
+    sc.appendChild(div("stat-icon",null,s.i));
+    sc.appendChild(p("stat-val",{style:{color:s.col}},String(s.v)));
+    sc.appendChild(div("stat-lbl",null,s.l));
+    sg.appendChild(sc);
+  });
+  main.appendChild(sg);
+
+  if(S.err&&S.tab!=="demo")main.appendChild(div("error-bar","⚠ "+S.err));
+
+  // Tabs
+  const tabs={live:{m:liveM.length>0?liveM:DEMO.filter(m=>m.status==="live"),i:"🔴",l:"Live"},upcoming:{m:upM.length>0?upM:DEMO.filter(m=>m.status==="upcoming"),i:"⏰",l:"Upcoming"},demo:{m:DEMO,i:"📊",l:"Demo"}};
+  const tabBar=div("tab-bar");
+  Object.entries(tabs).forEach(([key,{i,l,m}])=>{
+    const tb=btn("tab-btn"+(S.tab===key?" active":""),{onClick:()=>{S.tab=key;render();}});
+    tb.appendChild(document.createTextNode(i+" "+l+" "));
+    if(m.length>0){const cnt=span("tab-count",null,String(m.length));tb.appendChild(cnt);}
+    tabBar.appendChild(tb);
+  });
+  main.appendChild(tabBar);
+
+  // Match list
+  if(S.loading&&S.tab!=="demo"){
+    [1,2,3].forEach(()=>{
+      const sk=div("card skel");
+      sk.appendChild(div("skel-line",{style:{height:"19px",width:"110px"}}));
+      sk.appendChild(div("skel-line",{style:{height:"17px",width:"190px"}}));
+      const row=div("",{style:{display:"flex",gap:"7px"}});
+      row.appendChild(div("",{style:{height:"54px",flex:1,borderRadius:"9px",background:"rgba(51,65,85,0.3)"}}));
+      row.appendChild(div("",{style:{height:"54px",flex:1,borderRadius:"9px",background:"rgba(51,65,85,0.3)"}}));
+      sk.appendChild(row);
+      main.appendChild(sk);
+    });
+  } else {
+    const act=tabs[S.tab];
+    if(act.m.length===0){
+      const empty=div("card",{style:{textAlign:"center",padding:"40px"}});
+      empty.appendChild(p("",{style:{color:"#94a3b8",fontSize:"14px",marginBottom:"7px"}},"Koi match nahi mila"));
+      empty.appendChild(p("",{style:{color:"#64748b",fontSize:"13px",marginBottom:"14px"}},"Demo tab mein practice karo"));
+      empty.appendChild(btn("btn btn-vi",{style:{fontSize:"12px"},onClick:loadData},"↺ Refresh"));
+      main.appendChild(empty);
+    } else {
+      act.m.forEach(m=>main.appendChild(buildMatchCard(m)));
+    }
+  }
+  main.appendChild(p("",{style:{textAlign:"center",fontSize:"11px",color:"#334155",paddingTop:"14px"}},"CricSense AI · Entertainment only · 18+"));
+  page.appendChild(main);
+  return page;
+}
+
+function buildMatchCard(m){
+  const isL=m.status==="live",wp=winProb(m),bo=getBest(m.bk);
+  const card=div("match-card"+(isL?" live":""),{style:{animationDelay:(DEMO.indexOf(m)*40||0)+"ms"},onClick:()=>{S.selected=m;S.screen="detail";S.aiPhase="idle";S.ai=null;S.aiTab="ball";track("match_opened","Match",m.home+" vs "+m.away);render();}});
+  // Badges
+  const badges=div("",{style:{display:"flex",alignItems:"center",gap:"7px",flexWrap:"wrap",marginBottom:"8px"}});
+  badges.appendChild(span("badge",{style:{background:fmtColor(m.fmt)+"22",color:fmtColor(m.fmt),border:`1px solid ${fmtColor(m.fmt)}44`}},m.fmt));
+  if(isL){const lb=span("badge",{style:{background:"rgba(239,68,68,0.15)",color:"#ef4444",border:"1px solid rgba(239,68,68,0.3)",animation:"pulse 2s infinite"}});lb.appendChild(span("live-dot"));lb.appendChild(document.createTextNode(" LIVE"));badges.appendChild(lb);}
+  if(m.status==="upcoming"&&m.time){
+    const ct=span("badge",{style:{background:"rgba(245,158,11,0.15)",color:"#f59e0b",border:"1px solid rgba(245,158,11,0.3)"}});
+    ct.textContent="⏱ "+countdown(m.time);
+    setInterval(()=>{ct.textContent="⏱ "+countdown(m.time);},1000);
+    badges.appendChild(ct);
+  }
+  if(m.demo)badges.appendChild(span("badge",{style:{background:"rgba(51,65,85,0.4)",color:"#64748b",border:"1px solid rgba(51,65,85,0.5)",fontSize:"10px"}},"demo"));
+  if(isL&&m.live?.score)badges.appendChild(span("",{style:{marginLeft:"auto",fontFamily:"'IBM Plex Mono',monospace",fontSize:"15px",fontWeight:700,color:"#f1f5f9",background:"rgba(15,23,42,0.8)",border:"1px solid rgba(51,65,85,0.5)",borderRadius:"8px",padding:"3px 9px"}},m.live.score));
+  card.appendChild(badges);
+  if(m.league)card.appendChild(p("",{style:{fontSize:"11px",color:"#64748b",margin:"0 0 8px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},m.league));
+  // Teams
+  const teams=div("match-teams");
+  const ta=div("");ta.appendChild(p("team-name",null,m.home));if(isL&&m.live?.team===m.home)ta.appendChild(p("team-score",null,`${m.live.score} (${m.live.ov}ov)`));
+  const tb=div("",{style:{flex:1,textAlign:"right"}});tb.appendChild(p("team-name",null,m.away));
+  teams.appendChild(ta);teams.appendChild(span("",{style:{color:"#64748b",fontSize:"12px",fontWeight:700}},"vs"));teams.appendChild(tb);
+  card.appendChild(teams);
+  // Prob bar
+  if(wp){
+    const pb=div("prob-bar-wrap");
+    const pr=div("prob-row");
+    const la=div("");la.appendChild(p("prob-team",null,(m.live?.team||m.home).split(" ").slice(-1)[0]));la.appendChild(p("prob-pct",{style:{color:probColor(wp.a)}},wp.a+"%"));
+    const lb=div("");lb.appendChild(p("prob-team",null,(m.live?.team===m.home?m.away:m.home).split(" ").slice(-1)[0]));lb.appendChild(p("prob-pct",{style:{color:probColor(wp.b),textAlign:"right"}},wp.b+"%"));
+    pr.appendChild(la);pr.appendChild(lb);pb.appendChild(pr);
+    const pt=div("prob-track");pt.appendChild(div("prob-fill",{style:{width:wp.a+"%",background:`linear-gradient(to right,${probColor(wp.a)}88,${probColor(wp.a)})`}}));
+    pb.appendChild(pt);card.appendChild(pb);
+  }
+  // Odds
+  const odds=div("odds-row");
+  Object.entries(bo).slice(0,2).forEach(([n,p])=>{
+    const ob=div("odds-box");ob.appendChild(p("odds-team",null,n.split(" ").slice(-1)[0]));ob.appendChild(p("odds-val",null,p.toFixed(2)));ob.appendChild(p("odds-pct",null,ip(p).toFixed(0)+"%"));
+    odds.appendChild(ob);
+  });
+  odds.appendChild(span("",{style:{display:"flex",alignItems:"center",color:"#64748b",paddingLeft:"4px",fontSize:"14px"}},"→"));
+  card.appendChild(odds);
+  // Balls
+  if(isL&&m.live?.balls?.length>0){
+    const br=div("balls-row");br.appendChild(span("",{style:{fontSize:"11px",color:"#64748b"}},"Recent: "));
+    m.live.balls.forEach(b=>{const bc=div("ball",{style:{background:ballBg(b)}},b);br.appendChild(bc);});
+    br.appendChild(span("",{style:{marginLeft:"auto",fontFamily:"'IBM Plex Mono',monospace",fontSize:"12px",fontWeight:700,color:"#10b981"}},"RR "+m.live.rr));
+    card.appendChild(br);
+  }
+  return card;
+}
+
+// DETAIL
+function buildDetail(){
+  const m=S.selected;
+  const page=div("page",{style:{paddingBottom:"100px"}});
+  // Nav
+  const nav=div("nav",{style:{padding:"11px 16px"}});
+  nav.appendChild(btn("",{style:{width:"40px",height:"40px",borderRadius:"50%",border:"1px solid rgba(51,65,85,0.45)",background:"rgba(15,23,42,0.6)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0},onClick:()=>{S.screen="home";render();}},
+    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>`));
+  const nd=div("",{style:{flex:1,minWidth:0}});
+  nd.appendChild(p("",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"15px",margin:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#f1f5f9"}},m.home+" vs "+m.away));
+  const nb=div("",{style:{display:"flex",gap:"7px",marginTop:"3px"}});
+  nb.appendChild(span("badge",{style:{background:fmtColor(m.fmt)+"22",color:fmtColor(m.fmt),border:`1px solid ${fmtColor(m.fmt)}44`}},m.fmt));
+  if(m.status==="live"){const ld=span("",{style:{display:"flex",alignItems:"center",gap:"4px",fontSize:"11px",color:"#ef4444",fontWeight:700}});ld.appendChild(span("live-dot"));ld.appendChild(document.createTextNode(" LIVE"));nb.appendChild(ld);}
+  nd.appendChild(nb);nav.appendChild(nd);
+  if(m.status==="live"&&m.live?.score){
+    const sc=div("",{style:{textAlign:"right",flexShrink:0}});
+    sc.appendChild(p("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"15px",fontWeight:700,margin:0,color:"#f1f5f9"}},m.live.score));
+    sc.appendChild(p("",{style:{fontSize:"12px",color:"#10b981",margin:0,fontFamily:"'IBM Plex Mono',monospace"}},m.live.ov+"ov · "+m.live.rr));
+    nav.appendChild(sc);
+  }
+  page.appendChild(nav);
+
+  const main=div("",{style:{maxWidth:"600px",margin:"0 auto",padding:"14px 16px"}});
+
+  // Match summary card
+  const mc=div("card");
+  if(m.league)mc.appendChild(p("",{style:{fontSize:"11px",color:"#64748b",margin:"0 0 8px"}},m.league));
+  const L=m.live;
+  if(L?.score){
+    const sb=div("",{style:{marginBottom:"12px",paddingBottom:"12px",borderBottom:"1px solid rgba(51,65,85,0.4)"}});
+    const sr=div("",{style:{display:"flex",justifyContent:"space-between",marginBottom:"7px"}});
+    sr.appendChild(div("",[span("",{style:{color:"#94a3b8",fontSize:"13px"}},L.team+" · "),span("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"24px",fontWeight:700,color:"#f1f5f9"}},L.score),span("",{style:{color:"#94a3b8",fontSize:"13px"}}," ("+L.ov+"ov)")]));
+    const crr=div("",{style:{display:"flex",gap:"14px"}});
+    crr.appendChild(div("",{style:{textAlign:"center"}},[p("",{style:{fontSize:"10px",color:"#64748b",margin:"0 0 2px"}},"CRR"),p("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"14px",fontWeight:700,color:"#10b981",margin:0}},L.rr)]));
+    if(L.rrr)crr.appendChild(div("",{style:{textAlign:"center"}},[p("",{style:{fontSize:"10px",color:"#64748b",margin:"0 0 2px"}},"RRR"),p("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"14px",fontWeight:700,color:parseFloat(L.rrr)>parseFloat(L.rr)+2?"#ef4444":"#f59e0b",margin:0}},L.rrr)]));
+    sr.appendChild(crr);sb.appendChild(sr);
+    if(L.target){const tgt=p("",{style:{fontSize:"13px",color:"#94a3b8",marginBottom:"7px"}},"Target: ");tgt.innerHTML="Target: <strong style='color:#f1f5f9;font-family:IBM Plex Mono,monospace'>"+L.target+"</strong> · Need: <strong style='color:#f59e0b;font-family:IBM Plex Mono,monospace'>"+Math.max(0,L.target-parseInt(L.score))+" in "+Math.max(0,((m.fmt==="T20"?20:50)-parseFloat(L.ov))).toFixed(1)+" ov</strong>";sb.appendChild(tgt);}
+    if(L.balls?.length>0){const br=div("",{style:{display:"flex",gap:"5px",marginBottom:"7px",alignItems:"center"}});br.appendChild(span("",{style:{fontSize:"11px",color:"#64748b"}},"Last 6: "));L.balls.forEach(b=>{br.appendChild(div("ball",{style:{width:"27px",height:"27px",background:ballBg(b)}},b));});sb.appendChild(br);}
+    if(L.lastW)sb.appendChild(p("",{style:{fontSize:"13px",color:"#ef4444",fontWeight:600,margin:0}},"🔴 "+L.lastW));
+    mc.appendChild(sb);
+  } else {
+    const pm=div("",{style:{display:"flex",alignItems:"center",gap:"11px",marginBottom:"12px",paddingBottom:"12px",borderBottom:"1px solid rgba(51,65,85,0.4)"}});
+    pm.appendChild(span("",{style:{fontSize:"22px"}},"🏟️"));
+    pm.appendChild(div("",[p("",{style:{color:"#cbd5e1",fontSize:"13px",fontWeight:600,margin:0}},"Pre-Match"),p("",{style:{color:"#64748b",fontSize:"11px",margin:0}},new Date(m.time).toLocaleString("en-IN",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))]));
+    mc.appendChild(pm);
+  }
+  // Win prob
+  const wp=winProb(m);
+  if(wp){
+    const pb=div("prob-bar-wrap");
+    const pr=div("prob-row");
+    const la=div("");la.appendChild(p("prob-team",null,(L?.team||m.home).split(" ").slice(-1)[0]));la.appendChild(p("prob-pct",{style:{color:probColor(wp.a)}},wp.a+"%"));
+    const lb=div("");lb.appendChild(p("prob-team",null,(L?.team===m.home?m.away:m.home).split(" ").slice(-1)[0]));lb.appendChild(p("prob-pct",{style:{color:probColor(wp.b),textAlign:"right"}},wp.b+"%"));
+    pr.appendChild(la);pr.appendChild(lb);pb.appendChild(pr);
+    const pt=div("prob-track");pt.appendChild(div("prob-fill",{style:{width:wp.a+"%",background:`linear-gradient(to right,${probColor(wp.a)}88,${probColor(wp.a)})`}}));
+    pb.appendChild(pt);mc.appendChild(pb);
+  }
+  // Odds
+  const bo=getBest(m.bk);
+  const or=div("odds-row");
+  Object.entries(bo).slice(0,3).forEach(([n,p])=>{const ob=div("odds-box");ob.appendChild(p("odds-team",null,n.split(" ").slice(-1)[0]));ob.appendChild(p("odds-val",null,p.toFixed(2)));ob.appendChild(p("odds-pct",null,ip(p).toFixed(0)+"%"));or.appendChild(ob);});
+  mc.appendChild(or);
+  main.appendChild(mc);
+
+  // AI section
+  const aic=div("card",{style:{padding:0,overflow:"hidden"}});
+  const aih=div("",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"13px 15px",borderBottom:"1px solid rgba(51,65,85,0.4)"}});
+  const ahl=div("",{style:{display:"flex",alignItems:"center",gap:"9px"}});
+  ahl.appendChild(span("",{style:{fontSize:"17px"}},"🧠"));
+  ahl.appendChild(span("",{style:{fontSize:"13px",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em",color:"#8b5cf6"}},"CricSense AI"));
+  if(S.aiPhase==="done"&&S.ai){
+    const dec=S.ai.decision;
+    ahl.appendChild(span("badge",{style:{background:dec==="SAFE BET"?"rgba(16,185,129,0.15)":dec==="SMALL BET"?"rgba(245,158,11,0.15)":"rgba(51,65,85,0.4)",color:dec==="SAFE BET"?"#10b981":dec==="SMALL BET"?"#f59e0b":"#64748b",border:"1px solid rgba(51,65,85,0.5)",fontSize:"11px"}},dec));
+  }
+  aih.appendChild(ahl);
+  if(S.aiPhase!=="loading"){
+    aih.appendChild(btn("btn",{style:{background:S.aiPhase==="idle"||S.aiPhase==="error"?"#8b5cf6":"rgba(51,65,85,0.6)",color:"#fff",padding:"8px 15px",fontSize:"12px"},onClick:runAnalysis},S.aiPhase==="done"?"↺ Refresh":"🔍 Analysis Shuru Karo"));
+  }
+  aic.appendChild(aih);
+  if(S.aiPhase==="loading"){
+    const ld=div("",{style:{display:"flex",flexDirection:"column",alignItems:"center",padding:"36px 16px",gap:"11px"}});
+    ld.appendChild(div("",{style:{fontSize:"36px",animation:"spin 2s linear infinite"}},"🏏"));
+    ld.appendChild(p("",{style:{color:"#94a3b8",fontSize:"13px",margin:0,animation:"pulse 1.5s infinite"}},!m.live?.score?"Odds analyze ho raha…":"Ball-by-ball pressure calculate ho raha…"));
+    aic.appendChild(ld);
+  } else if(S.aiPhase==="error"){
+    aic.appendChild(div("",{style:{padding:"14px"}},[div("",{style:{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:"10px",padding:"11px 14px"}},[p("",{style:{color:"#ef4444",fontSize:"13px",margin:0}},"⚠ "+S.aiErr)])]));
+  } else if(S.aiPhase==="idle"){
+    aic.appendChild(div("",{style:{padding:"28px 16px",textAlign:"center"}},[p("",{style:{color:"#64748b",fontSize:"13px",margin:0}},"Upar 'Analysis Shuru Karo' dabao")]));
+    aic.appendChild(div("",{style:{padding:"0 14px 14px"}},buildWhatIf(m)));
+  } else if(S.aiPhase==="done"&&S.ai){
+    const ai=S.ai;
+    if(ai.shock_alert){
+      const sa=div("",{style:{margin:"14px 14px 0",background:"linear-gradient(to right,rgba(146,64,14,0.3),rgba(194,65,12,0.2))",border:"1px solid rgba(146,64,14,0.4)",borderRadius:"12px",padding:"11px 14px"}});
+      sa.appendChild(div("",{style:{display:"flex",alignItems:"center",gap:"7px",marginBottom:"5px"}},[span("",{style:{fontSize:"17px"}},"💥"),span("",{style:{fontSize:"12px",fontWeight:700,textTransform:"uppercase",color:"#f59e0b"}},"Shock Insight")]));
+      sa.appendChild(p("",{style:{color:"#fde68a",fontSize:"13px",lineHeight:"1.6",margin:0}},ai.shock_alert));
+      aic.appendChild(sa);
+    }
+    if(ai.smart_alert){
+      const sal=div("",{style:{margin:"11px 14px 0",background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.4)",borderRadius:"12px",padding:"11px 14px",display:"flex",alignItems:"center",gap:"9px"}});
+      sal.appendChild(span("",{style:{fontSize:"17px"}},"🚨"));sal.appendChild(p("",{style:{color:"#fca5a5",fontSize:"13px",fontWeight:600,margin:0}},ai.smart_alert));
+      aic.appendChild(sal);
+    }
+    const TABS=[{id:"ball",i:"⚾",l:"Ball"},{id:"wkt",i:"🎯",l:"Wicket"},{id:"score",i:"📊",l:"Score"},{id:"mkt",i:"🪤",l:"Market"},{id:"mom",i:"⚡",l:"Momentum"},{id:"player",i:"⚔️",l:"Player"},{id:"whatif",i:"🔮",l:"What If"}];
+    const tabRow=div("ai-tabs");
+    TABS.forEach(t=>{tabRow.appendChild(btn("ai-tab"+(S.aiTab===t.id?" active":""),{onClick:()=>{S.aiTab=t.id;render();}},t.i+" "+t.l));});
+    aic.appendChild(tabRow);
+    const content=div("",{style:{padding:"14px"}});
+    content.appendChild(buildAiTab(ai,m,S.aiTab));
+    aic.appendChild(content);
+  }
+  main.appendChild(aic);
+  main.appendChild(p("",{style:{textAlign:"center",fontSize:"11px",color:"#334155",padding:"14px 0"}},"CricSense AI · Entertainment only · 18+"));
+  page.appendChild(main);
+
+  // Chatbot
+  page.appendChild(buildChatbot(m));
+  return page;
+}
+
+function buildAiTab(ai,m,tab){
+  const L=m.live;
+  if(tab==="ball"){
+    const wrap=div("");
+    const bc=div("card");
+    bc.appendChild(span("section-lbl",null,"Agle 6 Balls"));
+    const bg=div("ball-grid");
+    const balls=ai.next_6_balls?.length?ai.next_6_balls:Array(6).fill("RUN");
+    balls.forEach((b,i)=>{
+      const col=div("ball-col");
+      col.appendChild(span("ball-num","#"+(i+1)));
+      col.appendChild(div("ball-circle",{style:{background:b==="WICKET"?"#dc2626":b==="SIX"?"#059669":b==="FOUR"?"#0284c7":b==="DOT"?"rgba(51,65,85,0.8)":"rgba(51,65,85,0.6)"}},ballIcon(b)));
+      col.appendChild(span("ball-lbl",null,b==="WICKET"?"Wicket":b==="SIX"?"Chakkha":b==="FOUR"?"Char":b==="DOT"?"Dot":"Run"));
+      if((ai.next_6_confidence||[])[i]!=null)col.appendChild(span("ball-conf",null,(ai.next_6_confidence[i])+"%"));
+      bg.appendChild(col);
+    });
+    bc.appendChild(bg);wrap.appendChild(bc);
+    if(ai.team_tip){
+      const col=ai.team_tip.action==="LAGAI"?"rgba(16,185,129,0.4)":ai.team_tip.action==="KHAI"?"rgba(239,68,68,0.4)":"rgba(245,158,11,0.3)";
+      const tc=div("tip-card",{style:{border:`1px solid ${col}`,background:ai.team_tip.action==="LAGAI"?"rgba(16,185,129,0.05)":ai.team_tip.action==="KHAI"?"rgba(239,68,68,0.05)":"rgba(245,158,11,0.05)"}});
+      const tr=div("",{style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"8px"}});
+      tr.appendChild(span("",{style:{fontSize:"28px"}},ai.team_tip.action==="LAGAI"?"📗":ai.team_tip.action==="KHAI"?"📕":"⏸️"));
+      tr.appendChild(span("",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"20px",color:ai.team_tip.action==="LAGAI"?"#10b981":ai.team_tip.action==="KHAI"?"#ef4444":"#f59e0b"}},ai.team_tip.action));
+      if(ai.team_tip.team)tr.appendChild(span("",{style:{color:"#cbd5e1",fontSize:"14px"}},`— ${ai.team_tip.team}`));
+      if(ai.team_tip.entry_price)tr.appendChild(span("",{style:{marginLeft:"auto",fontFamily:"'IBM Plex Mono',monospace",fontSize:"13px",fontWeight:700,color:"#10b981"}},`@ ${ai.team_tip.entry_price}`));
+      tc.appendChild(tr);tc.appendChild(p("",{style:{color:"#cbd5e1",fontSize:"13px",lineHeight:"1.6",margin:0}},ai.team_tip.note));
+      wrap.appendChild(tc);
+      if(ai.team_tip.action!=="WAIT"){
+        const ad=a("",{href:AD_LINK,target:"_blank",rel:"noopener noreferrer",style:{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",borderRadius:"12px",border:"1px solid rgba(16,185,129,0.3)",background:"rgba(16,185,129,0.08)",textDecoration:"none",marginBottom:"12px"},onClick:()=>track("ad_click","Ads","lagai_khai")});
+        ad.appendChild(span("",{style:{fontSize:"18px"}},"💰"));ad.appendChild(div("",[p("",{style:{color:"#10b981",fontSize:"13px",fontWeight:600,margin:"0 0 2px"}},"Best odds yahan milenge"),p("",{style:{color:"#64748b",fontSize:"11px",margin:0}},"Trusted bookmakers")]));
+        ad.appendChild(span("",{style:{color:"#10b981",fontSize:"12px",fontWeight:700}},"Bet →"));wrap.appendChild(ad);
+      }
+    }
+    if(ai.key_insight)wrap.appendChild(div("insight-card",[span("section-lbl",null,"AI Insight"),p("",{style:{color:"#cbd5e1",fontSize:"13px",lineHeight:"1.6",margin:0}},"💡 "+ai.key_insight)]));
+    return wrap;
+  }
+  if(tab==="wkt"){
+    const wrap=div("");
+    const prob=ai.wicket_probability||0,imm=ai.wicket_imminent,col=prob>=80?"#ef4444":prob>=60?"#f59e0b":"#10b981";
+    const rc=div("card",{style:{textAlign:"center",border:imm?"1px solid rgba(239,68,68,0.5)":"1px solid rgba(51,65,85,0.45)"}});
+    if(imm)rc.appendChild(p("",{style:{color:"#ef4444",fontWeight:700,fontSize:"13px",textTransform:"uppercase",marginBottom:"10px",animation:"pulse 1s infinite"}},"⚠️ WICKET IMMINENT!"));
+    const r=38,ci=2*Math.PI*r;
+    rc.innerHTML+=`<div style="display:flex;justify-content:center;margin-bottom:10px"><div style="position:relative;width:112px;height:112px"><svg width="112" height="112" viewBox="0 0 112 112" style="transform:rotate(-90deg)"><circle cx="56" cy="56" r="${r}" stroke="rgba(30,41,59,0.8)" stroke-width="8" fill="none"/><circle cx="56" cy="56" r="${r}" stroke="${col}" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="${ci}" stroke-dashoffset="${ci-(prob/100)*ci}" style="transition:stroke-dashoffset 1.5s ease"/></svg><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-family:IBM Plex Mono,monospace;font-size:24px;font-weight:700;color:${col}">${prob}%</span><span style="font-size:10px;color:#64748b">Wicket</span></div></div></div>`;
+    if(ai.wicket_in_balls)rc.appendChild(p("",{style:{color:"#cbd5e1",fontSize:"13px",marginBottom:"4px"}},`Expected: <strong style="color:#f1f5f9;font-family:IBM Plex Mono,monospace">${ai.wicket_in_balls} balls mein</strong>`));
+    if(ai.wicket_type)rc.appendChild(p("",{style:{color:"#94a3b8",fontSize:"13px",marginBottom:"8px"}},"Type: "+`<span style="color:#f1f5f9;font-weight:600">${ai.wicket_type}</span>`));
+    if(ai.wicket_reason)rc.appendChild(p("",{style:{color:"#cbd5e1",fontSize:"13px",background:"rgba(15,23,42,0.6)",borderRadius:"10px",padding:"10px",margin:0}},ai.wicket_reason));
+    wrap.appendChild(rc);
+    if(L?.pressure!=null){
+      const pc=div("card");pc.appendChild(span("section-lbl",null,"Batting Pressure"));
+      const pr=div("",{style:{display:"flex",justifyContent:"space-between",marginBottom:"5px"}});pr.appendChild(span("",{style:{color:"#cbd5e1",fontSize:"13px"}},"Pressure"));pr.appendChild(span("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"13px",fontWeight:700,color:"#f1f5f9"}},L.pressure));pc.appendChild(pr);
+      const bt=div("bar-track");bt.appendChild(div("bar-fill",{style:{width:L.pressure+"%",background:L.pressure>=80?"#ef4444":L.pressure>=60?"#f59e0b":"#10b981"}}));pc.appendChild(bt);
+      const bl=div("",{style:{display:"flex",justifyContent:"space-between",marginTop:"5px"}});bl.appendChild(span("",{style:{fontSize:"10px",color:"#10b981"}},"Calm"));bl.appendChild(span("",{style:{fontSize:"10px",color:"#f59e0b"}},"Building (60)"));bl.appendChild(span("",{style:{fontSize:"10px",color:"#ef4444"}},"Critical (85+)"));pc.appendChild(bl);
+      wrap.appendChild(pc);
+    }
+    if(L?.overs?.length>0){
+      const oc=div("card");oc.appendChild(span("section-lbl",null,"Runs Per Over"));
+      const mx=Math.max(...L.overs.map(x=>x.r),1);
+      const ob=div("",{style:{display:"flex",alignItems:"flex-end",gap:"2px",height:"72px"}});
+      L.overs.forEach(o=>{const h=Math.max(4,(o.r/mx)*64);const bar=div("",{style:{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:"2px",justifyContent:"flex-end"}});bar.appendChild(div("",{style:{width:"100%",height:h+"px",background:o.w>0?"#ef4444":o.r>=12?"#10b981":o.r<=4?"rgba(51,65,85,0.6)":"#38bdf8",borderRadius:"3px"}}));bar.appendChild(span("",{style:{fontSize:"8px",color:"#64748b"}},String(o.o)));ob.appendChild(bar);});
+      oc.appendChild(ob);wrap.appendChild(oc);
+    }
+    return wrap;
+  }
+  if(tab==="score"){
+    const wrap=div("");const p2=ai.score_projection,obo=ai.over_by_over||[],sess=ai.session_bets||[];
+    if(p2){
+      const sc=div("card",{style:{border:"1px solid rgba(139,92,246,0.3)"}});
+      sc.appendChild(span("section-lbl",{style:{color:"#8b5cf6"}},"Final Score Projection"));
+      const boxes=div("score-boxes");
+      [{l:"Min",v:p2.min,big:false},{l:"Most Likely",v:p2.likely,big:true},{l:"Max",v:p2.max,big:false}].forEach(x=>{
+        const b=div("score-box",{style:{background:x.big?"rgba(139,92,246,0.12)":"rgba(15,23,42,0.6)",border:x.big?"1px solid rgba(139,92,246,0.3)":`1px solid rgba(51,65,85,0.45)`}});
+        b.appendChild(div("",{style:{fontSize:"10px",color:"#64748b",textTransform:"uppercase",marginBottom:"4px"}},x.l));
+        b.appendChild(div("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:x.big?"28px":"18px",fontWeight:700,color:x.big?"#c4b5fd":"#94a3b8"}},String(x.v)));
+        boxes.appendChild(b);
+      });
+      sc.appendChild(boxes);
+      if(p2.note)sc.appendChild(p("",{style:{color:"#cbd5e1",fontSize:"13px",background:"rgba(15,23,42,0.6)",borderRadius:"10px",padding:"10px 12px",margin:0}},"💡 "+p2.note));
+      wrap.appendChild(sc);
+    }
+    if(obo.length>0){const oc=div("card");oc.appendChild(span("section-lbl",null,"Agle 3 Overs"));obo.forEach(o=>{const row=div("",{style:{display:"flex",alignItems:"center",gap:"8px",marginBottom:"7px"}});row.appendChild(span("",{style:{fontSize:"13px",color:"#cbd5e1",width:"50px"}},"Over "+o.over));const bt=div("bar-track",{style:{flex:1}});bt.appendChild(div("bar-fill",{style:{width:Math.min(100,(o.runs_max/14)*100)+"%",background:"#8b5cf6"}}));row.appendChild(bt);row.appendChild(span("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"12px",fontWeight:700,color:"#cbd5e1",width:"50px",textAlign:"right"}},o.runs_min+"–"+o.runs_max));oc.appendChild(row);});wrap.appendChild(oc);}
+    if(sess.length>0){const sc=div("card",{style:{border:"1px solid rgba(245,158,11,0.3)"}});sc.appendChild(span("section-lbl",{style:{color:"#f59e0b"}},"🎰 Session Bets"));sess.forEach(s=>{const row=div("",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(15,23,42,0.6)",border:"1px solid rgba(51,65,85,0.4)",borderRadius:"10px",padding:"10px 12px",marginBottom:"7px"}});const l=div("");l.appendChild(p("",{style:{color:"#cbd5e1",fontSize:"13px",fontWeight:600,margin:"0 0 2px"}},s.label));l.appendChild(p("",{style:{color:"#f59e0b",fontSize:"13px",fontWeight:700,margin:0}},s.prediction));row.appendChild(l);row.appendChild(span("badge",{style:{background:s.confidence>=75?"rgba(16,185,129,0.15)":"rgba(245,158,11,0.15)",color:s.confidence>=75?"#10b981":"#f59e0b",border:s.confidence>=75?"1px solid rgba(16,185,129,0.3)":"1px solid rgba(245,158,11,0.3)",fontSize:"12px"}},s.confidence+"%"));sc.appendChild(row);});wrap.appendChild(sc);}
+    return wrap;
+  }
+  if(tab==="mkt"){
+    const wrap=div("");
+    const bc=div("card");bc.appendChild(span("section-lbl",null,"Bookmaker Comparison"));
+    m.bk.forEach(bk=>{const br=div("bookmaker-row");br.appendChild(p("",{style:{fontSize:"11px",color:"#64748b",fontWeight:600,margin:"0 0 7px"}},bk.t));const or=div("",{style:{display:"flex",gap:"7px"}});bk.odds.forEach(o=>{const ob=div("",{style:{flex:1,textAlign:"center"}});ob.appendChild(div("",{style:{fontSize:"10px",color:"#64748b",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:"2px"}},o.n.split(" ").slice(-1)[0]));ob.appendChild(div("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"15px",fontWeight:700,color:"#10b981"}},o.p.toFixed(2)));ob.appendChild(div("",{style:{fontSize:"10px",color:"#64748b"}},ip(o.p).toFixed(0)+"%"));or.appendChild(ob);});br.appendChild(or);bc.appendChild(br);});
+    wrap.appendChild(bc);
+    const tr=ai.market_trap;
+    if(tr?.detected){const tc=div("card",{style:{border:"1px solid rgba(239,68,68,0.4)"}});tc.appendChild(div("",{style:{display:"flex",alignItems:"center",gap:"10px",marginBottom:"10px"}},[span("",{style:{fontSize:"22px"}},"🪤"),span("",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"14px",color:"#ef4444"}},"Market Trap!")]));tc.appendChild(p("",{style:{color:"#cbd5e1",fontSize:"13px",lineHeight:"1.6",marginBottom:"10px"}},tr.detail));if(tr.action)tc.appendChild(div("",{style:{background:"rgba(0,0,0,0.2)",borderRadius:"10px",padding:"10px 12px"}},[p("",{style:{color:"#f1f5f9",fontSize:"13px",margin:0}},"🎯 Action: "+tr.action)]));wrap.appendChild(tc);}
+    else{wrap.appendChild(div("card",{style:{border:"1px solid rgba(16,185,129,0.2)",textAlign:"center"}},[p("",{style:{color:"#10b981",fontSize:"13px",fontWeight:600,margin:"0 0 3px"}},"✓ Koi market trap nahi abhi"),p("",{style:{color:"#64748b",fontSize:"11px",margin:0}},"Odds normal hain")]));}
+    return wrap;
+  }
+  if(tab==="mom"){
+    const wrap=div("");
+    const wp2=ai.win_probability||{},pA=wp2[m.home]||50,pB=wp2[m.away]||50;
+    const pb=div("prob-bar-wrap");const pr=div("prob-row");
+    const la=div("");la.appendChild(p("prob-team",null,m.home.split(" ").slice(-1)[0]));la.appendChild(p("prob-pct",{style:{color:probColor(pA)}},pA+"%"));
+    const lb=div("");lb.appendChild(p("prob-team",null,m.away.split(" ").slice(-1)[0]));lb.appendChild(p("prob-pct",{style:{color:probColor(pB),textAlign:"right"}},pB+"%"));
+    pr.appendChild(la);pr.appendChild(lb);pb.appendChild(pr);
+    const pt=div("prob-track");pt.appendChild(div("prob-fill",{style:{width:pA+"%",background:`linear-gradient(to right,${probColor(pA)}88,${probColor(pA)})`}}));pb.appendChild(pt);wrap.appendChild(pb);
+    const mom=ai.momentum;
+    if(mom){const mc=div("card");mc.appendChild(div("",{style:{display:"flex",alignItems:"center",gap:"8px",marginBottom:"8px"}},[span("",{style:{fontSize:"18px"}},"⚡"),span("",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"13px",textTransform:"uppercase",color:"#f1f5f9"}},"Momentum")]));mc.appendChild(p("",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"15px",margin:"0 0 5px",color:"#f1f5f9"}},mom.current==="BALANCED"?"Dono balance hain":mom.current+" dominant"));if(mom.reason)mc.appendChild(p("",{style:{color:"#cbd5e1",fontSize:"13px",lineHeight:"1.6",margin:0}},mom.reason));wrap.appendChild(mc);}
+    const dec=ai.decision;const dc=div("card",{style:{border:dec==="SAFE BET"?"1px solid rgba(16,185,129,0.4)":dec==="SMALL BET"?"1px solid rgba(245,158,11,0.3)":"1px solid rgba(51,65,85,0.45)",textAlign:"center"}});
+    dc.appendChild(p("",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"24px",color:dec==="SAFE BET"?"#10b981":dec==="SMALL BET"?"#f59e0b":"#64748b",margin:"0 0 8px"}},dec==="SAFE BET"?"✅ SAFE BET":dec==="SMALL BET"?"🟡 SMALL BET":"⛔ WAIT"));
+    if(ai.favored_team&&dec!=="NO BET")dc.appendChild(p("",{style:{color:"#cbd5e1",fontSize:"15px",marginBottom:"6px"}},ai.favored_team+" pe"));
+    if(ai.reason)dc.appendChild(p("",{style:{color:"#94a3b8",fontSize:"13px",lineHeight:"1.6",marginBottom:"7px"}},ai.reason));
+    if(ai.confidence>0)dc.appendChild(p("",{style:{color:"#94a3b8",fontSize:"13px",margin:0}},`Confidence: <strong style="color:#f1f5f9;font-family:IBM Plex Mono,monospace;font-size:15px">${ai.confidence}%</strong>`));
+    if(ai.is_value_bet)dc.appendChild(p("",{style:{color:"#8b5cf6",fontSize:"13px",fontWeight:600,marginTop:"7px"}},"💎 Value Bet +"+ai.value_edge+"%"));
+    wrap.appendChild(dc);
+    if(dec==="SAFE BET"&&ai.favored_team){const ad=a("",{href:AD_LINK,target:"_blank",rel:"noopener noreferrer",style:{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",borderRadius:"12px",border:"1px solid rgba(16,185,129,0.3)",background:"rgba(16,185,129,0.08)",textDecoration:"none"},onClick:()=>track("ad_click","Ads","safe_bet")});ad.appendChild(span("",{style:{fontSize:"18px"}},"💰"));ad.appendChild(div("",[p("",{style:{color:"#10b981",fontSize:"13px",fontWeight:600,margin:"0 0 2px"}},ai.favored_team+" pe best odds yahan"),p("",{style:{color:"#64748b",fontSize:"11px",margin:0}},"Trusted · Compare karo")]));ad.appendChild(span("",{style:{color:"#10b981",fontSize:"12px",fontWeight:700}},"Bet →"));wrap.appendChild(ad);}
+    return wrap;
+  }
+  if(tab==="player"&&L){
+    const wrap=div("");
+    if(L.bat?.length>0){const bc=div("card");bc.appendChild(span("section-lbl",null,"Live Batsmen"));L.bat.forEach((b,i)=>{const row=div("",{style:{marginBottom:i<L.bat.length-1?"14px":"0",paddingBottom:i<L.bat.length-1?"14px":"0",borderBottom:i<L.bat.length-1?"1px solid rgba(51,65,85,0.4)":"none"}});const tr=div("",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"8px"}});const tl=div("",{style:{display:"flex",alignItems:"center",gap:"7px"}});tl.appendChild(span("",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"14px",color:"#f1f5f9"}},b.n));if(b.s)tl.appendChild(span("badge",{style:{background:"rgba(16,185,129,0.15)",color:"#10b981",border:"1px solid rgba(16,185,129,0.3)",fontSize:"10px"}},"ON STRIKE"));tr.appendChild(tl);tr.appendChild(div("",[span("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"17px",fontWeight:700,color:"#f1f5f9"}},b.r),span("",{style:{fontSize:"12px",color:"#64748b"}}," ("+b.b+")")]));row.appendChild(tr);const sr=div("",{style:{marginBottom:"4px"}});sr.appendChild(div("",{style:{display:"flex",justifyContent:"space-between",marginBottom:"4px"}},[span("",{style:{fontSize:"12px",color:"#94a3b8"}},"Strike Rate"),span("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"12px",fontWeight:700,color:"#f1f5f9"}},b.sr)]));const bt=div("bar-track");bt.appendChild(div("bar-fill",{style:{width:Math.min(100,b.sr/2)+"%",background:b.sr>=130?"#10b981":b.sr>=100?"#f59e0b":"#ef4444"}}));sr.appendChild(bt);row.appendChild(sr);if(b.rec?.length>0){const rr=div("",{style:{display:"flex",gap:"4px",marginTop:"7px"}});rr.appendChild(span("",{style:{fontSize:"11px",color:"#64748b"}},"Recent: "));b.rec.forEach(r=>{rr.appendChild(div("ball",{style:{width:"22px",height:"22px",background:ballBg(r)}},r));});row.appendChild(rr);}bc.appendChild(row);});wrap.appendChild(bc);}
+    if(L.bowler){const bwc=div("card");bwc.appendChild(span("section-lbl",null,"Current Bowler"));const row=div("",{style:{display:"flex",alignItems:"center",gap:"12px"}});row.appendChild(div("",{style:{width:"46px",height:"46px",borderRadius:"50%",background:"rgba(51,65,85,0.6)",border:"1px solid rgba(51,65,85,0.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"20px"}},"🎳"));const bi=div("",{style:{flex:1}});bi.appendChild(p("",{style:{fontFamily:"'Syne',sans-serif",fontWeight:700,fontSize:"14px",margin:"0 0 2px",color:"#f1f5f9"}},L.bowler.n));bi.appendChild(p("",{style:{color:"#94a3b8",fontSize:"12px",margin:0}},L.bowler.type+" · "+L.bowler.spell));row.appendChild(bi);row.appendChild(div("",{style:{textAlign:"right"}},[p("",{style:{fontSize:"10px",color:"#64748b",margin:"0 0 2px"}},"Economy"),p("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"17px",fontWeight:700,color:L.bowler.eco<=6?"#10b981":L.bowler.eco<=8?"#f59e0b":"#ef4444",margin:0}},String(L.bowler.eco))]));bwc.appendChild(row);wrap.appendChild(bwc);}
+    return wrap;
+  }
+  return buildWhatIf(m);
+}
+
+function buildWhatIf(m){
+  const wrap=div("");
+  const wc=div("card",{style:{border:"1px solid rgba(245,158,11,0.3)"}});
+  wc.appendChild(span("section-lbl",{style:{color:"#f59e0b"}},"🔮 What If Scenarios"));
+  const presets=div("whatif-presets");
+  ["Agar next 2 overs wicket nahi giri?","Agar target 20 zyada hota?","Chase possible hai?","Death overs 15+ per over?"].forEach(p2=>{const b=btn("whatif-btn",{onClick:()=>runWhatIf(m,p2,wc)},p2);presets.appendChild(b);});
+  wc.appendChild(presets);
+  const row=div("",{style:{display:"flex",gap:"8px"}});
+  const input=inp("input-field",{placeholder:"Apna scenario likho…",id:"wi-inp"});
+  row.appendChild(input);
+  row.appendChild(btn("btn",{style:{background:"#f59e0b",color:"#070d18",padding:"10px 14px",borderRadius:"12px"},onClick:()=>runWhatIf(m,input.value,wc)},"Ask"));
+  wc.appendChild(row);
+  const result=div("",{id:"wi-result"});
+  wc.appendChild(result);
+  wrap.appendChild(wc);
+  return wrap;
+}
+async function runWhatIf(m,q,container){
+  if(!q?.trim())return;
+  const rd=container.querySelector("#wi-result")||container.appendChild(div("",{id:"wi-result"}));
+  rd.innerHTML="";rd.appendChild(div("",{style:{color:"#f59e0b",fontSize:"13px",padding:"8px"}},"⏳ Calculating…"));
   try{
-    const d=await apiPost("/api/ai",{matchId,tab,message});
-    return d.result||"AI response unavailable.";
-  }catch{ return "⚠️ AI engine busy hai. Thodi der baad try karo."; }
+    const L=m.live;const ctx=L?.score?`${L.team} ${L.score} (${L.ov}ov) CRR:${L.rr} ${L.target?"Target:"+L.target+" RRR:"+L.rrr:""}`:\"Pre-match\";
+    const ans=await callAI([{role:"user",content:`CricSense AI. Hinglish 3-4 lines. ${m.home} vs ${m.away} | ${m.fmt}\n${ctx}\nWhat if: "${q}"\nNumbers ke saath direct jawab do.`}],400,0.5);
+    rd.innerHTML="";rd.appendChild(div("",{style:{background:"rgba(15,23,42,0.6)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:"10px",padding:"12px 14px",marginTop:"12px"}},[p("",{style:{color:"#f59e0b",fontSize:"13px",lineHeight:"1.6",margin:0}},ans)]));
+  }catch(e){rd.innerHTML="";rd.appendChild(p("",{style:{color:"#ef4444",fontSize:"13px",padding:"8px"}},"Error: "+e.message));}
 }
 
-// ══════════════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════════════
-const ABBR={"Lahore Qalandars":"LQ","Karachi Kings":"KK","India":"IND","Australia":"AUS","Chennai Super Kings":"CSK","Mumbai Indians":"MI","Kolkata Knight Riders":"KKR","Royal Challengers Bangalore":"RCB","Sunrisers Hyderabad":"SRH","Delhi Capitals":"DC","Punjab Kings":"PBKS","Rajasthan Royals":"RR","Pakistan":"PAK","England":"ENG","South Africa":"SA","New Zealand":"NZ","Sri Lanka":"SL","Bangladesh":"BAN","West Indies":"WI","Afghanistan":"AFG"};
-const EMOJI={"India":"🇮🇳","Australia":"🇦🇺","Pakistan":"🇵🇰","England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","South Africa":"🇿🇦","New Zealand":"🇳🇿","Sri Lanka":"🇱🇰","Bangladesh":"🇧🇩","West Indies":"🏝️","Mumbai Indians":"💙","Chennai Super Kings":"💛","Royal Challengers Bangalore":"❤️","Kolkata Knight Riders":"💜","Lahore Qalandars":"🟢","Karachi Kings":"🔵"};
-function abbr(n=""){ return ABBR[n]||(n.split(" ").length>=2?(n.split(" ")[0][0]+n.split(" ").slice(-1)[0][0]).toUpperCase():n.slice(0,3).toUpperCase()); }
-function emoji(n){ return EMOJI[n]||"🏏"; }
-function teams(m){ const p=m.name?.split(" vs ")||[]; return{t1:m.teamInfo?.[0]?.name||p[0]||"Team A",t2:m.teamInfo?.[1]?.name||p[1]||"Team B"}; }
-function fmtScore(s){ if(!s?.length)return null; return s.map(x=>`${x.r}/${x.w} (${x.o} ov)`).join(" | "); }
-function isLive(m){ const s=m.status?.toLowerCase()||""; return s==="live"||s==="1"||s.includes("progress"); }
-function p2odds(p){ if(p<=0||p>=100)return"N/A"; return(100/p).toFixed(2); }
-
-// ══════════════════════════════════════════════════
-// COMPONENTS
-// ══════════════════════════════════════════════════
-
-function Onboarding({onDone}){
-  const[step,setStep]=useState(0);
-  const slides=[
-    {icon:"🏏",title:"CricSense AI",sub:"India's #1 Cricket Intelligence",desc:"Real-time AI predictions, live match analysis, and smart signals — all in one place.",col:C.accent},
-    {icon:"⚡",title:"Live AI Analysis",sub:"Ball-by-ball Intelligence",desc:"7 AI tabs: Ball predictions, Wicket alerts, Score forecasts, Market traps, Momentum shifts, Player stats & What If scenarios.",col:C.accent2},
-    {icon:"🎯",title:"Smart Signals",sub:"LAGAI / KHAI with exact entry",desc:"AI-powered signals with live odds, win probability gauges, and market trap detection.",col:C.accent3},
-  ];
-  const sl=slides[step];
-  return(
-    <div style={{position:"fixed",inset:0,background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:9999,padding:24}}>
-      <div style={{position:"absolute",inset:0,opacity:.04,backgroundImage:`linear-gradient(${C.accent} 1px,transparent 1px),linear-gradient(90deg,${C.accent} 1px,transparent 1px)`,backgroundSize:"48px 48px",pointerEvents:"none"}}/>
-      <div style={{position:"relative",maxWidth:380,width:"100%",textAlign:"center"}}>
-        <div className="anim-float" style={{fontSize:88,marginBottom:24,filter:`drop-shadow(0 0 24px ${sl.col})`}}>{sl.icon}</div>
-        <h1 style={{fontFamily:"var(--fh)",fontSize:34,fontWeight:800,color:sl.col,textShadow:`0 0 30px ${sl.col}`,marginBottom:8}}>{sl.title}</h1>
-        <p style={{fontFamily:"var(--fm)",fontSize:11,color:C.text2,letterSpacing:2,textTransform:"uppercase",marginBottom:18}}>{sl.sub}</p>
-        <p style={{fontSize:17,color:C.text,lineHeight:1.65,marginBottom:40}}>{sl.desc}</p>
-        <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:32}}>
-          {slides.map((_,i)=><div key={i} onClick={()=>setStep(i)} style={{width:i===step?28:8,height:8,borderRadius:4,cursor:"pointer",background:i===step?sl.col:"rgba(255,255,255,.18)",transition:"all .3s"}}/>)}
-        </div>
-        <button onClick={()=>step<slides.length-1?setStep(step+1):onDone()} style={{width:"100%",padding:"16px",background:`linear-gradient(135deg,${sl.col},${sl.col}99)`,color:"#000",fontSize:18,fontWeight:700,borderRadius:14,fontFamily:"var(--fh)",boxShadow:`0 0 30px ${sl.col}44`,border:`1px solid ${sl.col}`}}>
-          {step<slides.length-1?"Aage Chalo →":"🚀 Shuru Karo!"}
-        </button>
-        {step<slides.length-1&&<button onClick={onDone} style={{marginTop:14,color:C.text2,fontSize:14}}>Skip →</button>}
-      </div>
-    </div>
-  );
-}
-
-function LiveBadge(){
-  return(
-    <span style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(255,59,48,.15)",border:"1px solid rgba(255,59,48,.5)",color:"#ff3b30",fontSize:10,fontFamily:"var(--fm)",padding:"2px 8px",borderRadius:20,letterSpacing:1}}>
-      <span style={{width:6,height:6,borderRadius:"50%",background:"#ff3b30",animation:"pulse 1.2s ease infinite",boxShadow:"0 0 6px #ff3b30"}}/>
-      LIVE
-    </span>
-  );
-}
-
-function WinGauge({prob,label,color,size=110}){
-  const r=(size/2)-10,circ=2*Math.PI*r,dash=(prob/100)*circ;
-  return(
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
-      <div style={{position:"relative",width:size,height:size}}>
-        <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
-          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,.07)" strokeWidth={9}/>
-          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={9} strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" style={{transition:"stroke-dasharray 1.2s ease",filter:`drop-shadow(0 0 6px ${color})`}}/>
-        </svg>
-        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <span style={{fontFamily:"var(--fm)",fontSize:size*.19,fontWeight:700,color,textShadow:`0 0 12px ${color}`}}>{prob}%</span>
-        </div>
-      </div>
-      <span style={{fontSize:11,fontWeight:600,color:C.text2,textAlign:"center",maxWidth:size,lineHeight:1.3}}>{label}</span>
-    </div>
-  );
-}
-
-function MatchCard({match,onClick,selected}){
-  const{t1,t2}=teams(match),live=isLive(match),score=fmtScore(match.score),prob=match.prob||{t1:50,t2:50};
-  return(
-    <div onClick={()=>onClick(match)} className="anim-slide" style={{background:selected?`linear-gradient(135deg,rgba(0,229,255,.1),rgba(0,229,255,.04))`:C.card,border:selected?`1px solid ${C.accent}`:`1px solid ${live?"rgba(255,59,48,.3)":C.border}`,borderRadius:18,padding:18,cursor:"pointer",transition:"all .3s",marginBottom:12,boxShadow:selected?`0 0 24px rgba(0,229,255,.15)`:"none"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <span style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",letterSpacing:1}}>{match.matchType?.toUpperCase()} · {match.series?.split(" ").slice(0,3).join(" ")}</span>
-        {live?<LiveBadge/>:<span style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",padding:"2px 8px",background:"rgba(255,255,255,.05)",borderRadius:20,border:"1px solid rgba(255,255,255,.1)"}}>UPCOMING</span>}
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",gap:10,marginBottom:14}}>
-        <div>
-          <div style={{fontSize:26,marginBottom:3}}>{emoji(t1)}</div>
-          <div style={{fontFamily:"var(--fh)",fontSize:16,fontWeight:700,color:C.text}}>{abbr(t1)}</div>
-          <div style={{fontSize:11,color:C.text2}}>{t1}</div>
-        </div>
-        <div style={{fontFamily:"var(--fm)",fontSize:11,color:C.text2,padding:"5px 10px",background:"rgba(255,255,255,.05)",borderRadius:8}}>VS</div>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:26,marginBottom:3}}>{emoji(t2)}</div>
-          <div style={{fontFamily:"var(--fh)",fontSize:16,fontWeight:700,color:C.text}}>{abbr(t2)}</div>
-          <div style={{fontSize:11,color:C.text2}}>{t2}</div>
-        </div>
-      </div>
-      {score&&<div style={{fontFamily:"var(--fm)",fontSize:12,color:C.accent,background:"rgba(0,229,255,.07)",padding:"7px 12px",borderRadius:10,marginBottom:12,textAlign:"center",border:"1px solid rgba(0,229,255,.15)"}}>{score}</div>}
-      {live&&(
-        <div>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:11,fontFamily:"var(--fm)"}}>
-            <span style={{color:C.accent}}>{prob.t1}%</span>
-            <span style={{color:C.text2,fontSize:9,letterSpacing:1}}>WIN PROB</span>
-            <span style={{color:C.accent2}}>{prob.t2}%</span>
-          </div>
-          <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,.09)",overflow:"hidden"}}>
-            <div style={{height:"100%",width:`${prob.t1}%`,background:`linear-gradient(90deg,${C.accent},${C.accent2})`,borderRadius:3,transition:"width 1.2s ease"}}/>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// AI Panel — calls /api/ai (no keys in frontend)
-const TABS=["Ball","Wicket","Score","Market","Momentum","Player","WhatIf"];
-const TCOLORS={Ball:C.accent,Wicket:C.red,Score:C.accent3,Market:C.gold,Momentum:C.accent2,Player:"#a78bfa",WhatIf:"#f472b6"};
-const TICONS={Ball:"⚾",Wicket:"🎯",Score:"📊",Market:"💰",Momentum:"⚡",Player:"👤",WhatIf:"🔮"};
-
-function AIPanel({match}){
-  const[tab,setTab]=useState("Ball");
-  const[loading,setLoading]=useState(false);
-  const[result,setResult]=useState("");
-  const[inp,setInp]=useState("");
-  const[chat,setChat]=useState([]);
-  const col=TCOLORS[tab];
-
-  async function analyze(){
-    setLoading(true);setResult("");
-    const r=await fetchAI(match.id,tab,null);
-    setResult(r);setLoading(false);
+function buildChatbot(m){
+  const hist=S.chatMsgs[m.id]||[];
+  const wrap=div("");
+  if(!S.chatOpen){
+    const cb=btn("chat-btn",{onClick:()=>{S.chatOpen=true;if(!hist.length){const L=m.live;S.chatMsgs[m.id]=[{r:"ai",t:L?.score?`${m.home} vs ${m.away} — ${L.score} (${L.ov}ov) CRR ${L.rr}. Main is match ka expert hoon! 🏏`:`${m.home} vs ${m.away} — Pre-match! Kya poochna hai? 🏏`}];}render();}});
+    const icon=div("",{style:{width:"32px",height:"32px",borderRadius:"50%",background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}});icon.innerHTML=`<svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7H3a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M5 14v8h14v-8H5m3 2h2v2H8v-2m6 0h2v2h-2v-2z"/></svg>`;
+    cb.appendChild(icon);cb.appendChild(div("",[p("",{style:{color:"white",fontSize:"12px",fontWeight:700,margin:0,fontFamily:"'IBM Plex Mono',monospace"}},"AI Agent"),p("",{style:{color:"rgba(221,214,254,0.8)",fontSize:"10px",margin:0,fontFamily:"'IBM Plex Mono',monospace"}},hist.length>0?hist.length+" msgs":"Match Expert")]));
+    if(!hist.length){const dot=span("",{style:{position:"absolute",top:"-4px",right:"-4px",width:"14px",height:"14px",borderRadius:"50%",background:"#10b981",border:"2px solid #7c3aed",animation:"pulse 1s infinite"}});cb.appendChild(dot);}
+    wrap.appendChild(cb);
+  } else {
+    const cp=div("chat-panel");
+    // Header
+    const ch=div("chat-header");
+    const ci=div("",{style:{width:"36px",height:"36px",borderRadius:"50%",background:"rgba(139,92,246,0.2)",border:"1px solid rgba(139,92,246,0.4)",display:"flex",alignItems:"center",justifyContent:"center"}});ci.innerHTML=`<svg viewBox="0 0 24 24" width="20" height="20" fill="#8b5cf6"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7H3a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M5 14v8h14v-8H5m3 2h2v2H8v-2m6 0h2v2h-2v-2z"/></svg>`;
+    ch.appendChild(ci);
+    ch.appendChild(div("",{style:{flex:1}},["AI Agent ",span("",{style:{color:"#8b5cf6"}},"CricSense"),`<div style="display:flex;align-items:center;gap:5px;margin-top:2px"><span class="live-dot"></span><span style="font-size:11px;color:#10b981">${m.home} vs ${m.away}</span></div>`]));
+    ch.appendChild(btn("",{style:{width:"28px",height:"28px",borderRadius:"50%",background:"rgba(51,65,85,0.6)",border:"none",color:"#94a3b8",cursor:"pointer",fontSize:"14px"},onClick:()=>{S.chatOpen=false;render();}},"✕"));
+    cp.appendChild(ch);
+    // Live strip
+    if(m.live?.score){
+      const ls=div("",{style:{display:"flex",alignItems:"center",gap:"7px",padding:"7px 16px",background:"rgba(15,23,42,0.6)",borderBottom:"1px solid rgba(51,65,85,0.4)",flexShrink:0}});
+      ls.appendChild(span("live-dot"));ls.appendChild(span("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"13px",fontWeight:700}},m.live.score));ls.appendChild(span("",{style:{color:"#64748b",fontSize:"11px"}},"("+m.live.ov+"ov)"));ls.appendChild(span("",{style:{fontFamily:"'IBM Plex Mono',monospace",fontSize:"13px",fontWeight:700,color:"#10b981"}},m.live.rr));
+      cp.appendChild(ls);
+    }
+    // Messages
+    const msgs=div("chat-messages",{id:"chat-msgs"});
+    hist.forEach(msg=>{
+      const row=div("chat-msg"+(msg.r==="user"?" user":""));
+      if(msg.r==="ai"){const ic=div("",{style:{width:"24px",height:"24px",borderRadius:"50%",background:"rgba(139,92,246,0.3)",border:"1px solid rgba(139,92,246,0.4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}});ic.innerHTML=`<svg viewBox="0 0 24 24" width="13" height="13" fill="#8b5cf6"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7H3a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M5 14v8h14v-8H5m3 2h2v2H8v-2m6 0h2v2h-2v-2z"/></svg>`;row.appendChild(ic);}
+      row.appendChild(div("msg-bubble "+( msg.r==="user"?"user":"ai"),null,msg.t));
+      msgs.appendChild(row);
+    });
+    if(S.chatLoading){const ld=div("chat-msg");const ic=div("",{style:{width:"24px",height:"24px",borderRadius:"50%",background:"rgba(139,92,246,0.3)",display:"flex",alignItems:"center",justifyContent:"center"}});ic.innerHTML=`<svg viewBox="0 0 24 24" width="13" height="13" fill="#8b5cf6"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7H3a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M5 14v8h14v-8H5m3 2h2v2H8v-2m6 0h2v2h-2v-2z"/></svg>`;ld.appendChild(ic);const bubble=div("msg-bubble ai",{style:{display:"flex",gap:"5px"}});[0,150,300].forEach(d=>{bubble.appendChild(span("",{style:{width:"6px",height:"6px",borderRadius:"50%",background:"#64748b",display:"inline-block",animation:`bounce 1s ${d}ms infinite`}},"\u200b"));});ld.appendChild(bubble);msgs.appendChild(ld);}
+    cp.appendChild(msgs);
+    setTimeout(()=>{const el=document.getElementById("chat-msgs");if(el)el.scrollTop=el.scrollHeight;},50);
+    // Suggestions
+    if(hist.length<=2&&!S.chatLoading){
+      const sugg=div("sugg-row");
+      const L=m.live;const suggestions=L?.score?["LAGAI ya KHAI?","Wicket kab girega?","Score kitna jayega?","Market trap hai?"]:["Kaun jeetega?","Safe bet hai?","Odds mein value?","Pre-match tip do"];
+      suggestions.forEach(s=>{const b=btn("sugg-btn",{onClick:()=>{S.chatMsgs[m.id]=[...(S.chatMsgs[m.id]||[]),{r:"user",t:s}];sendChat(m,s);render();}},s);sugg.appendChild(b);});
+      cp.appendChild(sugg);
+    }
+    // Input
+    const iw=div("chat-input-wrap");const ir=div("chat-input-row");const input=inp("chat-input",{placeholder:"Kuch bhi pucho…",id:"chat-input-field",value:S.chatInput||""});
+    input.addEventListener("input",e=>S.chatInput=e.target.value);
+    input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&S.chatInput?.trim()){const q=S.chatInput;S.chatInput="";S.chatMsgs[m.id]=[...(S.chatMsgs[m.id]||[]),{r:"user",t:q}];sendChat(m,q);render();}});
+    const sb=btn("chat-send",{style:{background:S.chatLoading?"rgba(51,65,85,0.6)":"#8b5cf6"},onClick:()=>{const q=S.chatInput;if(!q?.trim()||S.chatLoading)return;S.chatInput="";S.chatMsgs[m.id]=[...(S.chatMsgs[m.id]||[]),{r:"user",t:q}];sendChat(m,q);render();}});
+    sb.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>`;
+    ir.appendChild(input);ir.appendChild(sb);iw.appendChild(ir);cp.appendChild(iw);
+    wrap.appendChild(cp);
+    setTimeout(()=>{const i=document.getElementById("chat-input-field");if(i)i.focus();},100);
   }
-  async function send(){
-    if(!inp.trim())return;
-    const q=inp.trim();setInp("");
-    setChat(h=>[...h,{r:"u",t:q}]);
-    const a=await fetchAI(match.id,"chat",q);
-    setChat(h=>[...h,{r:"a",t:a}]);
-  }
-
-  return(
-    <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:20,overflow:"hidden"}} className="anim-slide">
-      <div style={{display:"flex",overflowX:"auto",background:C.bg2,borderBottom:`1px solid ${C.border}`,scrollbarWidth:"none"}}>
-        {TABS.map(t=>(
-          <button key={t} onClick={()=>{setTab(t);setResult("");}} style={{padding:"12px 14px",flexShrink:0,background:tab===t?`${TCOLORS[t]}18`:"none",color:tab===t?TCOLORS[t]:C.text2,fontSize:12,fontWeight:600,fontFamily:"var(--fb)",borderBottom:tab===t?`2px solid ${TCOLORS[t]}`:"2px solid transparent",transition:"all .2s"}}>
-            {TICONS[t]} {t}
-          </button>
-        ))}
-      </div>
-      <div style={{padding:16}}>
-        <button onClick={analyze} disabled={loading} style={{width:"100%",padding:14,background:`linear-gradient(135deg,${col},${col}99)`,color:"#000",fontSize:15,fontWeight:700,borderRadius:12,fontFamily:"var(--fh)",boxShadow:`0 4px 20px ${col}30`,marginBottom:16,opacity:loading?.7:1}}>
-          {loading?"🤖 AI Soch Raha Hai...":`🧠 ${tab} Analysis Karo`}
-        </button>
-        {result&&<div className="anim-fade" style={{background:"rgba(255,255,255,.03)",border:`1px solid ${col}25`,borderRadius:12,padding:16,marginBottom:16,fontSize:14,lineHeight:1.75,color:C.text,whiteSpace:"pre-wrap",fontFamily:"var(--fb)"}}>{result}</div>}
-        <div style={{borderTop:`1px solid ${C.border}`,paddingTop:14}}>
-          <div style={{fontSize:11,color:C.text2,marginBottom:10,fontFamily:"var(--fm)",letterSpacing:1}}>💬 MATCH CHATBOT</div>
-          {chat.length>0&&(
-            <div style={{maxHeight:200,overflowY:"auto",marginBottom:12,display:"flex",flexDirection:"column",gap:8}}>
-              {chat.map((m,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:m.r==="u"?"flex-end":"flex-start"}}>
-                  <div style={{maxWidth:"82%",padding:"8px 12px",borderRadius:m.r==="u"?"12px 12px 0 12px":"12px 12px 12px 0",background:m.r==="u"?"rgba(0,229,255,.12)":"rgba(255,255,255,.05)",border:`1px solid ${m.r==="u"?"rgba(0,229,255,.3)":C.border}`,fontSize:13,color:C.text,lineHeight:1.5,fontFamily:"var(--fb)"}}>{m.t}</div>
-                </div>
-              ))}
-            </div>
-          )}
-          <div style={{display:"flex",gap:8}}>
-            <input value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Kuch bhi pucho match ke baare mein..." style={{flex:1,padding:"10px 14px",background:"rgba(255,255,255,.05)",border:`1px solid ${C.border}`,borderRadius:10,color:C.text,fontSize:13}}/>
-            <button onClick={send} style={{padding:"10px 16px",background:C.accent,color:"#000",borderRadius:10,fontSize:16,fontWeight:700}}>→</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return wrap;
 }
 
-function Market({match}){
-  const prob=match.prob||{t1:50,t2:50,t1n:"Team A",t2n:"Team B"};
-  const{t1,t2}=teams(match);
-  return(
-    <div style={{display:"flex",flexDirection:"column",gap:12}}>
-      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
-        <div style={{fontSize:11,color:C.gold,marginBottom:14,fontFamily:"var(--fm)",letterSpacing:2}}>💰 LAGAI / KHAI SIGNALS</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          {[{lbl:"LAGAI (BACK)",odds:p2odds(prob.t1),team:abbr(t1),c:C.green,sig:"✓ BUY",bg:"rgba(52,199,89,.1)",bc:"rgba(52,199,89,.3)"},
-            {lbl:"KHAI (LAY)",odds:p2odds(prob.t2),team:abbr(t2),c:C.red,sig:"⚠ WAIT",bg:"rgba(255,59,48,.1)",bc:"rgba(255,59,48,.3)"}
-          ].map(x=>(
-            <div key={x.lbl} style={{background:x.bg,border:`1px solid ${x.bc}`,borderRadius:12,padding:14,textAlign:"center"}}>
-              <div style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",letterSpacing:1,marginBottom:6}}>{x.lbl}</div>
-              <div style={{fontFamily:"var(--fh)",fontSize:26,fontWeight:800,color:x.c}}>{x.odds}</div>
-              <div style={{fontSize:11,color:C.text2,marginTop:2}}>{x.team}</div>
-              <div style={{marginTop:8,padding:"4px 8px",background:`${x.c}22`,borderRadius:6,fontSize:11,color:x.c,fontWeight:700}}>{x.sig}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div style={{background:"rgba(255,215,0,.06)",border:"1px solid rgba(255,215,0,.2)",borderRadius:14,padding:14,display:"flex",gap:10,alignItems:"center"}}>
-        <span style={{fontSize:24}}>🪤</span>
-        <div>
-          <div style={{fontSize:12,fontWeight:700,color:C.gold,marginBottom:3}}>Market Trap Alert</div>
-          <div style={{fontSize:12,color:C.text2}}>Odds shifting against public sentiment. Smart money favors {abbr(prob.t1>prob.t2?t1:t2)}.</div>
-        </div>
-      </div>
-      {[{n:t1,p:prob.t1,c:C.accent},{n:t2,p:prob.t2,c:C.accent2}].map(x=>(
-        <div key={x.n} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:14}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-            <span style={{fontSize:14,color:C.text,fontFamily:"var(--fh)",fontWeight:700}}>{abbr(x.n)}</span>
-            <span style={{fontSize:13,color:x.c,fontFamily:"var(--fm)"}}>{x.p}%</span>
-          </div>
-          <div style={{height:8,background:"rgba(255,255,255,.08)",borderRadius:4,overflow:"hidden"}}>
-            <div style={{height:"100%",width:`${x.p}%`,background:x.c,borderRadius:4,boxShadow:`0 0 8px ${x.c}80`,transition:"width 1.5s ease"}}/>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+async function sendChat(m,q){
+  S.chatLoading=true;render();
+  try{
+    const L=m.live;const ctx=[`Match: ${m.home} vs ${m.away} | ${m.fmt}`,L?.score?`Score: ${L.team} ${L.score} (${L.ov}ov) CRR:${L.rr}`:"Pre-match",L?.target?"Target:"+L.target+" RRR:"+L.rrr:""].filter(Boolean).join(" | ");
+    const sys=`CricSense AI. Hinglish (Hindi+English). 2-4 lines. Direct. Cricket betting.\n\nMatch: ${ctx}`;
+    const hist=S.chatMsgs[m.id]||[];const last=hist.slice(-8);
+    const api=last.map((x,i)=>({role:x.r==="user"?"user":"assistant",content:i===0?`${sys}\n\n${x.t}`:x.t}));
+    const rep=await callAI(api,500,0.7);
+    S.chatMsgs[m.id]=[...(S.chatMsgs[m.id]||[]),{r:"ai",t:rep||"Dobara pucho!"}];
+  }catch(e){S.chatMsgs[m.id]=[...(S.chatMsgs[m.id]||[]),{r:"ai",t:"⚠️ "+e.message}];}
+  S.chatLoading=false;render();
 }
 
-function BallPred(){
-  const balls=[{n:1,t:"DOT",p:28,c:C.text2},{n:2,t:"4️⃣ FOUR",p:14,c:C.accent3},{n:3,t:"WIDE",p:8,c:C.gold},{n:4,t:"1 RUN",p:31,c:C.accent},{n:5,t:"🚨 WICKET",p:11,c:C.red},{n:6,t:"6️⃣ SIX",p:8,c:C.accent2}];
-  return(
-    <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
-      <div style={{fontSize:11,color:C.accent,marginBottom:14,fontFamily:"var(--fm)",letterSpacing:2}}>⚾ NEXT 6 BALLS PREDICTION</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
-        {balls.map(b=>(
-          <div key={b.n} style={{background:`${b.c}0d`,border:`1px solid ${b.c}30`,borderRadius:12,padding:"12px 8px",textAlign:"center"}}>
-            <div style={{fontFamily:"var(--fm)",fontSize:10,color:C.text2,marginBottom:4}}>Ball {b.n}</div>
-            <div style={{fontFamily:"var(--fh)",fontSize:13,fontWeight:700,color:b.c,marginBottom:2}}>{b.t}</div>
-            <div style={{fontSize:11,color:C.text2,fontFamily:"var(--fm)"}}>{b.p}%</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+async function runAnalysis(){
+  S.aiPhase="loading";S.ai=null;render();track("analysis_started","Match",S.selected?.home+" vs "+S.selected?.away);
+  try{const r=await doAnalyze(S.selected);S.ai=r;S.aiPhase="done";
+    if(r.smart_alert)showToast("⚡ "+r.smart_alert,"danger");
+    else if(r.wicket_imminent)showToast("🎯 WICKET IMMINENT!","danger");
+    else if(r.market_trap?.detected)showToast("🪤 Market Trap!","danger");
+    else if(r.decision==="SAFE BET")showToast("✅ SAFE BET: "+r.favored_team+" · "+r.confidence+"%","bet");
+    else if(r.decision==="SMALL BET")showToast("🟡 Small Bet: "+r.favored_team,"info");
+  }catch(e){S.aiErr=e.message;S.aiPhase="error";}
+  render();
 }
 
-function MatchDetail({match,dtab,setDtab}){
-  const{t1,t2}=teams(match),prob=match.prob||{t1:50,t2:50},score=fmtScore(match.score),live=isLive(match);
-  const dtabs=["Overview","AI Analysis","Signals","Ball Pred"];
-  return(
-    <div className="anim-slide">
-      <div style={{background:`linear-gradient(135deg,${C.bg2},${C.bg3})`,border:`1px solid ${C.border}`,borderRadius:22,padding:20,marginBottom:16}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
-          <div>
-            <div style={{fontSize:10,color:C.text2,fontFamily:"var(--fm)",letterSpacing:2,marginBottom:4}}>{match.matchType} · {match.series}</div>
-            <div style={{fontSize:12,color:C.text2}}>📍 {match.venue||"TBD"}</div>
-          </div>
-          {live?<LiveBadge/>:<span style={{fontSize:11,color:C.text2,fontFamily:"var(--fm)"}}>UPCOMING</span>}
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",gap:12,marginBottom:16}}>
-          <WinGauge prob={prob.t1} label={t1} color={C.accent} size={100}/>
-          <div style={{textAlign:"center"}}>
-            <div style={{fontFamily:"var(--fm)",fontSize:11,color:C.text2,marginBottom:6}}>VS</div>
-            {score&&<div style={{fontSize:10,color:C.accent,fontFamily:"var(--fm)",background:"rgba(0,229,255,.08)",padding:"4px 8px",borderRadius:6,border:"1px solid rgba(0,229,255,.2)"}}>{score}</div>}
-          </div>
-          <WinGauge prob={prob.t2} label={t2} color={C.accent2} size={100}/>
-        </div>
-        <div style={{height:7,borderRadius:4,background:"rgba(255,255,255,.08)",overflow:"hidden"}}>
-          <div style={{height:"100%",width:`${prob.t1}%`,background:`linear-gradient(90deg,${C.accent},${C.accent2})`,borderRadius:4,transition:"width 1.5s ease",boxShadow:`0 0 12px ${C.accent}60`}}/>
-        </div>
-        <div style={{display:"flex",justifyContent:"space-between",marginTop:5}}>
-          <span style={{fontSize:10,color:C.accent,fontFamily:"var(--fm)"}}>{prob.t1}% {abbr(t1)}</span>
-          <span style={{fontSize:10,color:C.accent2,fontFamily:"var(--fm)"}}>{abbr(t2)} {prob.t2}%</span>
-        </div>
-      </div>
-      <div style={{display:"flex",gap:8,marginBottom:16,overflowX:"auto",scrollbarWidth:"none"}}>
-        {dtabs.map(t=>(
-          <button key={t} onClick={()=>setDtab(t)} style={{padding:"8px 16px",flexShrink:0,background:dtab===t?C.accent:"rgba(255,255,255,.05)",color:dtab===t?"#000":C.text2,borderRadius:22,fontSize:12,fontWeight:600,fontFamily:"var(--fb)",border:`1px solid ${dtab===t?C.accent:C.border}`,transition:"all .2s"}}>{t}</button>
-        ))}
-      </div>
-      {dtab==="Overview"&&(
-        <div className="anim-slide" style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:16,padding:16}}>
-          <div style={{fontSize:11,color:C.accent2,marginBottom:12,fontFamily:"var(--fm)",letterSpacing:2}}>📋 MATCH INFO</div>
-          {[["Format",match.matchType],["Series",match.series],["Venue",match.venue||"TBD"],["Status",match.status]].map(([k,v])=>(
-            <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.border}`}}>
-              <span style={{fontSize:13,color:C.text2}}>{k}</span>
-              <span style={{fontSize:13,color:C.text,fontWeight:600,textAlign:"right",maxWidth:"60%"}}>{v||"—"}</span>
-            </div>
-          ))}
-        </div>
-      )}
-      {dtab==="AI Analysis"&&<AIPanel match={match}/>}
-      {dtab==="Signals"&&<Market match={match}/>}
-      {dtab==="Ball Pred"&&<BallPred match={match}/>}
-    </div>
-  );
+function getMatches(status){return S.matches.filter(m=>m.status===status);}
+
+async function loadData(){
+  S.loading=true;S.err="";render();
+  try{const m=await fetchMatches();if(!m.length){S.err="Abhi koi live match nahi mila — Demo tab mein practice karo";S.matches=[];}else{S.matches=m;const lc=m.filter(x=>x.status==="live").length;showToast(`🌐 ${m.length} matches (${lc} live)`,"success");}S.lastFetch=new Date();}catch(e){S.err="Error: "+e.message;}
+  S.loading=false;render();
 }
 
-function Header({n,onRefresh,spinning}){
-  return(
-    <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(5,10,15,.96)",backdropFilter:"blur(20px)",borderBottom:`1px solid ${C.border}`,padding:"12px 16px"}}>
-      <div style={{maxWidth:760,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div>
-          <div style={{fontFamily:"var(--fh)",fontSize:21,fontWeight:800,color:C.accent,textShadow:`0 0 20px ${C.accent}60`,letterSpacing:-.5}}>
-            🏏 CricSense <span style={{color:C.accent2}}>AI</span>
-          </div>
-          <div style={{fontFamily:"var(--fm)",fontSize:9,color:C.text2,letterSpacing:2}}>INDIA'S #1 CRICKET INTELLIGENCE</div>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{fontFamily:"var(--fm)",fontSize:10,color:C.text2,background:"rgba(255,255,255,.05)",padding:"4px 10px",borderRadius:8,border:`1px solid ${C.border}`}}>{n} matches</div>
-          <button onClick={onRefresh} style={{background:"rgba(0,229,255,.1)",border:`1px solid rgba(0,229,255,.3)`,color:C.accent,padding:"7px 14px",borderRadius:9,fontSize:13,fontFamily:"var(--fb)",fontWeight:600,animation:spinning?"spin 1s linear infinite":"none"}}>⟳ Refresh</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════════
-// MAIN APP
-// ══════════════════════════════════════════════════
-function App(){
-  const[ob,setOb]=useState(()=>localStorage.getItem("csob")==="1");
-  const[matches,setMatches]=useState([]);
-  const[loading,setLoading]=useState(true);
-  const[spinning,setSpinning]=useState(false);
-  const[sel,setSel]=useState(null);
-  const[dtab,setDtab]=useState("Overview");
-  const[mtab,setMtab]=useState("live");
-
-  const load=useCallback(async(r=false)=>{
-    r?setSpinning(true):setLoading(true);
-    const m=await fetchMatches();
-    setMatches(m);
-    setLoading(false);setSpinning(false);
-  },[]);
-
-  useEffect(()=>{load();},[]);
-  useEffect(()=>{const t=setInterval(()=>load(true),60000);return()=>clearInterval(t);},[]);
-
-  const live=matches.filter(isLive);
-  const upcoming=matches.filter(m=>!isLive(m));
-  const shown=mtab==="live"?live:upcoming;
-
-  if(!ob)return<Onboarding onDone={()=>{localStorage.setItem("csob","1");setOb(true);}}/>;
-
-  return(
-    <div style={{minHeight:"100vh",background:C.bg}}>
-      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,opacity:.025,backgroundImage:`linear-gradient(${C.accent} 1px,transparent 1px),linear-gradient(90deg,${C.accent} 1px,transparent 1px)`,backgroundSize:"56px 56px"}}/>
-      <Header n={matches.length} onRefresh={()=>load(true)} spinning={spinning}/>
-      <div style={{maxWidth:760,margin:"0 auto",paddingBottom:60,position:"relative",zIndex:1}}>
-        <div style={{display:"flex",borderBottom:`1px solid ${C.border}`,background:C.bg2,position:"sticky",top:61,zIndex:90}}>
-          {[{id:"live",lbl:`🔴 Live (${live.length})`},{id:"upcoming",lbl:`⏰ Upcoming (${upcoming.length})`}].map(t=>(
-            <button key={t.id} onClick={()=>{setMtab(t.id);setSel(null);}} style={{flex:1,padding:"13px 8px",background:mtab===t.id?"rgba(0,229,255,.07)":"none",color:mtab===t.id?C.accent:C.text2,fontSize:12,fontWeight:600,fontFamily:"var(--fb)",borderBottom:mtab===t.id?`2px solid ${C.accent}`:"2px solid transparent",transition:"all .2s"}}>{t.lbl}</button>
-          ))}
-        </div>
-        {sel?(
-          <div style={{padding:16}}>
-            <button onClick={()=>setSel(null)} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.05)",border:`1px solid ${C.border}`,color:C.text2,padding:"8px 16px",borderRadius:10,fontSize:13,fontFamily:"var(--fb)",marginBottom:16}}>← Wapas</button>
-            <MatchDetail match={sel} dtab={dtab} setDtab={setDtab}/>
-          </div>
-        ):(
-          <div style={{padding:16}}>
-            {loading?(
-              <div style={{textAlign:"center",padding:56}}>
-                <div className="spinning" style={{display:"inline-block",fontSize:44,marginBottom:16}}>🏏</div>
-                <div style={{color:C.text2,fontFamily:"var(--fm)",fontSize:12}}>Loading matches...</div>
-              </div>
-            ):shown.length===0?(
-              <div style={{textAlign:"center",padding:48,color:C.text2}}>
-                <div style={{fontSize:44,marginBottom:12}}>🌙</div>
-                <div>Abhi koi {mtab==="live"?"live":"upcoming"} match nahi hai.</div>
-              </div>
-            ):(
-              shown.map(m=><MatchCard key={m.id} match={m} onClick={m=>{setSel(m);setDtab("Overview");}} selected={sel?.id===m.id}/>)
-            )}
-          </div>
-        )}
-      </div>
-      <div style={{textAlign:"center",fontSize:10,color:"rgba(255,255,255,.18)",fontFamily:"var(--fm)",padding:"8px 0 16px",position:"fixed",bottom:0,left:0,right:0,pointerEvents:"none"}}>
-        Entertainment Only · 18+ · Responsible Gambling
-      </div>
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+// ── Boot ──────────────────────────────────────────────────────
+render();
+if(S.screen==="home")loadData();
+setInterval(()=>{if(S.screen==="home"&&!S.loading)loadData();},2*60*1000);
 </script>
 </body>
 </html>
