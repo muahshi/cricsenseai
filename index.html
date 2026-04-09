@@ -1,4 +1,4 @@
-8<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -119,7 +119,7 @@ const FLAG = {
 };
 
 function abbr(name) {
-  if (!name) return "??";
+  if (!name) return "NA";
   if (ABBR[name]) return ABBR[name];
   const words = name.split(" ");
   if (words.length >= 2) {
@@ -168,9 +168,9 @@ function toOdds(prob) {
 function Onboarding(props) {
   const [step, setStep] = useState(0);
   const slides = [
-    { icon: "Cricket", emoji: "??", title: "CricSense AI", sub: "India's #1 Cricket Intelligence", desc: "Real-time AI predictions, live match analysis, and smart signals all in one place.", col: C.accent },
-    { icon: "Lightning", emoji: "??", title: "Live AI Analysis", sub: "Ball-by-ball Intelligence", desc: "7 AI tabs: Ball predictions, Wicket alerts, Score forecasts, Market traps, Momentum and more.", col: C.accent2 },
-    { icon: "Target", emoji: "??", title: "Smart Signals", sub: "LAGAI / KHAI with exact entry", desc: "AI-powered signals with live odds, win probability gauges, and market trap detection.", col: C.accent3 }
+    { title: "CricSense AI", sub: "India's #1 Cricket Intelligence", desc: "Real-time AI predictions, live match analysis, and smart signals all in one place.", col: C.accent },
+    { title: "Live AI Analysis", sub: "Ball-by-ball Intelligence", desc: "7 AI tabs: Ball predictions, Wicket alerts, Score forecasts, Market traps, Momentum and more.", col: C.accent2 },
+    { title: "Smart Signals", sub: "LAGAI / KHAI with exact entry", desc: "AI-powered signals with live odds, win probability gauges, and market trap detection.", col: C.accent3 }
   ];
   const sl = slides[step];
 
@@ -178,8 +178,31 @@ function Onboarding(props) {
     <div style={{ position: "fixed", inset: 0, background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 24 }}>
       <div style={{ position: "absolute", inset: 0, opacity: 0.04, backgroundImage: "linear-gradient(" + C.accent + " 1px,transparent 1px),linear-gradient(90deg," + C.accent + " 1px,transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
       <div style={{ position: "relative", maxWidth: 380, width: "100%", textAlign: "center" }}>
-        <div className="float" style={{ fontSize: 72, marginBottom: 24, filter: "drop-shadow(0 0 20px " + sl.col + ")" }}>
-          {step === 0 ? "??" : step === 1 ? "??" : "??"}
+        <div className="float" style={{ marginBottom: 24, display:"flex", justifyContent:"center" }}>
+          {step === 0 && (
+            <svg width="72" height="72" viewBox="0 0 80 80" fill="none" style={{filter:"drop-shadow(0 0 20px "+sl.col+")"}}>
+              <ellipse cx="40" cy="40" rx="36" ry="12" stroke={sl.col} strokeWidth="2.5" fill="none" transform="rotate(-35 40 40)"/>
+              <circle cx="40" cy="40" r="36" stroke={sl.col} strokeWidth="2" fill="none" opacity="0.25"/>
+              <line x1="12" y1="55" x2="68" y2="25" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/>
+              <circle cx="40" cy="40" r="7" fill={sl.col}/>
+            </svg>
+          )}
+          {step === 1 && (
+            <svg width="72" height="72" viewBox="0 0 80 80" fill="none" style={{filter:"drop-shadow(0 0 20px "+sl.col+")"}}>
+              <polygon points="40,6 50,30 76,30 55,50 63,76 40,58 17,76 25,50 4,30 30,30" fill={sl.col} opacity="0.9"/>
+            </svg>
+          )}
+          {step === 2 && (
+            <svg width="72" height="72" viewBox="0 0 80 80" fill="none" style={{filter:"drop-shadow(0 0 20px "+sl.col+")"}}>
+              <circle cx="40" cy="40" r="32" stroke={sl.col} strokeWidth="2.5" fill="none"/>
+              <circle cx="40" cy="40" r="18" stroke={sl.col} strokeWidth="2" fill="none" opacity="0.6"/>
+              <circle cx="40" cy="40" r="7" fill={sl.col}/>
+              <line x1="40" y1="4" x2="40" y2="16" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/>
+              <line x1="40" y1="64" x2="40" y2="76" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/>
+              <line x1="4" y1="40" x2="16" y2="40" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/>
+              <line x1="64" y1="40" x2="76" y2="40" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/>
+            </svg>
+          )}
         </div>
         <h1 style={{ fontFamily: "'Exo 2', sans-serif", fontSize: 32, fontWeight: 800, color: sl.col, textShadow: "0 0 30px " + sl.col, marginBottom: 8 }}>{sl.title}</h1>
         <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: C.text2, letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>{sl.sub}</p>
@@ -640,7 +663,7 @@ function App() {
           <div style={{ padding: 16 }}>
             {loading ? (
               <div style={{ textAlign: "center", padding: 56 }}>
-                <div className="spin" style={{ display: "inline-block", fontSize: 44, marginBottom: 16 }}>o</div>
+                <div style={{ width:48, height:48, border:"4px solid rgba(0,229,255,0.2)", borderTop:"4px solid #00e5ff", borderRadius:"50%", animation:"spinning 1s linear infinite", margin:"0 auto 16px" }} />
                 <div style={{ color: C.text2, fontFamily: "'Space Mono', monospace", fontSize: 12 }}>Loading matches...</div>
               </div>
             ) : shown.length === 0 ? (
