@@ -1,14 +1,23 @@
 import { config } from "./config.js";
 
-const BASE = () => `https://api.telegram.org/bot${config.telegramToken}`;
+function base() {
+  return "https://api.telegram.org/bot" + config.telegramToken;
+}
 
 export async function send(chatId, text) {
   if (!config.telegramToken) return;
-  await fetch(`${BASE()}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true }),
-  }).catch(() => {});
+  try {
+    await fetch(base() + "/sendMessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        parse_mode: "HTML",
+        disable_web_page_preview: true
+      })
+    });
+  } catch (e) {}
 }
 
 export async function broadcast(text) {
@@ -16,10 +25,14 @@ export async function broadcast(text) {
 }
 
 export async function setWebhook(url) {
-  const r = await fetch(`${BASE()}/setWebhook`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
-  });
-  return r.json();
+  try {
+    var r = await fetch(base() + "/setWebhook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: url })
+    });
+    return r.json();
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 }
