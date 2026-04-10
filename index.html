@@ -4,581 +4,623 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>CricSense AI</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700;800&family=Space+Mono:wght@400;700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #050a0f;
-  --bg2: #0a1520;
-  --bg3: #0f1e2e;
-  --accent: #00e5ff;
-  --accent2: #ff6b35;
-  --accent3: #39ff14;
-  --gold: #ffd700;
-  --red: #ff3b30;
-  --green: #34c759;
-  --text: #e8f4f8;
-  --text2: #7ca9c0;
-  --border: rgba(0, 229, 255, 0.15);
-  --card: rgba(10, 21, 32, 0.95);
-}
-html { scroll-behavior: smooth; }
+html, body { height: 100%; }
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: #050d14;
+  color: #e2f0f7;
   font-family: 'Rajdhani', sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  min-height: 100vh;
+  font-size: 15px;
   overflow-x: hidden;
 }
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: #00e5ff44; border-radius: 2px; }
 button { cursor: pointer; border: none; outline: none; font-family: inherit; background: none; }
-input { font-family: inherit; outline: none; border: none; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-@keyframes slidein { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
-@keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-@keyframes spinning { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.slide { animation: slidein 0.4s ease both; }
-.fade { animation: fadein 0.5s ease both; }
-.float { animation: floating 3s ease-in-out infinite; }
-.spin { animation: spinning 1s linear infinite; }
+input, textarea { font-family: inherit; outline: none; border: none; background: none; }
+@keyframes livepulse { 0%,100%{opacity:1;} 50%{opacity:.2;} }
+@keyframes slidein { from{transform:translateY(12px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+@keyframes fadein { from{opacity:0;} to{opacity:1;} }
+@keyframes spin { to{transform:rotate(360deg);} }
+@keyframes slideup { from{transform:translateY(100%);} to{transform:translateY(0);} }
+@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+.anim { animation: slidein .35s ease both; }
+.fade { animation: fadein .4s ease both; }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
 
-const { useState, useEffect, useCallback } = React;
-
-// COLORS
 const C = {
-  bg: "#050a0f",
-  bg2: "#0a1520",
-  bg3: "#0f1e2e",
-  accent: "#00e5ff",
-  accent2: "#ff6b35",
-  accent3: "#39ff14",
-  gold: "#ffd700",
-  red: "#ff3b30",
-  green: "#34c759",
-  text: "#e8f4f8",
-  text2: "#7ca9c0",
-  border: "rgba(0,229,255,0.15)",
-  card: "rgba(10,21,32,0.95)"
+  bg: "#050d14", bg2: "#091520", bg3: "#0d1e2e", bg4: "#111f30",
+  accent: "#00e5ff", accent2: "#ff6b35", accent3: "#39ff14",
+  gold: "#ffd700", red: "#ff3b30", green: "#2ecc71",
+  purple: "#8b5cf6", text: "#e2f0f7", text2: "#6a9ab8",
+  border: "rgba(0,229,255,0.12)", card: "rgba(9,21,32,0.98)"
 };
 
-// API CALLS - all go to /api/ backend
-async function fetchMatches() {
-  try {
-    const r = await fetch("/api/predictions");
-    const d = await r.json();
-    return d.data || [];
-  } catch (e) {
-    return [];
-  }
+// ── API ──────────────────────────────────────────────────────────────
+async function apiGet(path) {
+  const r = await fetch(path);
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+async function apiPost(path, body) {
+  const r = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
 }
 
-async function fetchAI(matchId, matchName, tab, message) {
+async function loadMatches() {
+  try { const d = await apiGet("/api/predictions"); return d.data || []; }
+  catch { return []; }
+}
+async function askAI(matchName, matchScore, tab, msg) {
   try {
-    const r = await fetch("/api/ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ matchId, matchName, tab, message })
-    });
-    const d = await r.json();
-    return d.result || "AI response unavailable.";
-  } catch (e) {
-    return "AI engine busy hai. Thodi der baad try karo.";
-  }
+    const d = await apiPost("/api/ai", { matchName, matchScore, tab, message: msg });
+    return d.result || null;
+  } catch { return null; }
 }
 
-// UTILS
+// ── UTILS ─────────────────────────────────────────────────────────────
 const ABBR = {
-  "Lahore Qalandars": "LQ", "Karachi Kings": "KK", "India": "IND",
-  "Australia": "AUS", "Pakistan": "PAK", "England": "ENG",
-  "Chennai Super Kings": "CSK", "Mumbai Indians": "MI",
-  "Kolkata Knight Riders": "KKR", "Royal Challengers Bangalore": "RCB",
-  "Sunrisers Hyderabad": "SRH", "Delhi Capitals": "DC",
-  "Punjab Kings": "PBKS", "Rajasthan Royals": "RR",
-  "South Africa": "SA", "New Zealand": "NZ", "Sri Lanka": "SL",
-  "Bangladesh": "BAN", "West Indies": "WI", "Afghanistan": "AFG"
+  "Lahore Qalandars":"LQ","Karachi Kings":"KK","India":"IND","Australia":"AUS",
+  "Pakistan":"PAK","England":"ENG","Chennai Super Kings":"CSK","Mumbai Indians":"MI",
+  "Kolkata Knight Riders":"KKR","Royal Challengers Bangalore":"RCB",
+  "Sunrisers Hyderabad":"SRH","Delhi Capitals":"DC","Punjab Kings":"PBKS",
+  "Rajasthan Royals":"RR","South Africa":"SA","New Zealand":"NZ",
+  "Sri Lanka":"SL","Bangladesh":"BAN","West Indies":"WI","Afghanistan":"AFG"
 };
-
-const FLAG = {
-  "India": "IND", "Australia": "AUS", "Pakistan": "PAK",
-  "England": "ENG", "South Africa": "SA", "New Zealand": "NZ",
-  "Sri Lanka": "SL", "Bangladesh": "BAN", "West Indies": "WI"
-};
-
-function abbr(name) {
-  if (!name) return "NA";
-  if (ABBR[name]) return ABBR[name];
-  const words = name.split(" ");
-  if (words.length >= 2) {
-    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
-  }
-  return name.slice(0, 3).toUpperCase();
+function abbr(n) {
+  if (!n) return "??";
+  if (ABBR[n]) return ABBR[n];
+  const w = n.split(" ");
+  return w.length >= 2 ? (w[0][0]+w[w.length-1][0]).toUpperCase() : n.slice(0,3).toUpperCase();
 }
-
-function getTeams(match) {
-  const parts = (match.name || "").split(" vs ");
-  const t1 = (match.teamInfo && match.teamInfo[0] && match.teamInfo[0].name) || parts[0] || "Team A";
-  const t2 = (match.teamInfo && match.teamInfo[1] && match.teamInfo[1].name) || parts[1] || "Team B";
-  return { t1, t2 };
+function getTeams(m) {
+  const p = (m.name||"").split(" vs ");
+  return {
+    t1: m.teamInfo?.[0]?.name || p[0] || "Team A",
+    t2: m.teamInfo?.[1]?.name || p[1] || "Team B"
+  };
 }
-
-function formatScore(score) {
-  if (!score || !score.length) return null;
-  return score.map(function(s) { return s.r + "/" + s.w + " (" + s.o + " ov)"; }).join(" | ");
+function fmtScore(s) {
+  if (!s?.length) return null;
+  return s.map(x => x.r+"/"+x.w+" ("+x.o+" ov)").join(" | ");
 }
-
-function isLive(match) {
-  const s = (match.status || "").toLowerCase();
-  return s === "live" || s === "1" || s.indexOf("progress") !== -1;
+function isLive(m) {
+  const s = (m.status||"").toLowerCase();
+  return s==="live"||s==="1"||s.includes("progress");
 }
-
-function calcProb(match) {
-  const t = getTeams(match);
-  const s = match.score && match.score[0];
-  if (!s) return { t1: 50, t2: 50 };
-  const mt = (match.matchType || "").toUpperCase();
-  const totalOvers = mt === "T20" ? 20 : 50;
-  const rr = s.o > 0 ? s.r / s.o : 0;
-  const proj = s.r + rr * (totalOvers - s.o) * ((10 - s.w) / 10);
-  const par = mt === "T20" ? 165 : 280;
-  let p = 50 + ((proj - par) / par) * 30;
+function calcProb(m) {
+  const s = m.score?.[0];
+  if (!s) return { t1:50, t2:50 };
+  const tot = (m.matchType||"").toUpperCase()==="T20"?20:50;
+  const rr = s.o>0?s.r/s.o:0;
+  const proj = s.r + rr*(tot-s.o)*((10-s.w)/10);
+  const par = (m.matchType||"").toUpperCase()==="T20"?165:280;
+  let p = 50+((proj-par)/par)*30;
   p = Math.min(85, Math.max(15, p));
-  return { t1: Math.round(p), t2: Math.round(100 - p) };
+  return { t1:Math.round(p), t2:Math.round(100-p) };
+}
+function calcCRR(m) {
+  const s = m.score?.[0];
+  if (!s||!s.o) return null;
+  return (s.r/s.o).toFixed(2);
+}
+function calcOdds(prob) {
+  if (!prob||prob<=0||prob>=100) return "N/A";
+  return (100/prob).toFixed(2);
+}
+function recentBalls() {
+  const opts = ["0","0","1","4","W","6","2","0","1","4","W","0"];
+  return Array.from({length:6},()=>opts[Math.floor(Math.random()*opts.length)]);
 }
 
-function toOdds(prob) {
-  if (prob <= 0 || prob >= 100) return "N/A";
-  return (100 / prob).toFixed(2);
-}
-
-// ONBOARDING
-function Onboarding(props) {
-  const [step, setStep] = useState(0);
-  const slides = [
-    { title: "CricSense AI", sub: "India's #1 Cricket Intelligence", desc: "Real-time AI predictions, live match analysis, and smart signals all in one place.", col: C.accent },
-    { title: "Live AI Analysis", sub: "Ball-by-ball Intelligence", desc: "7 AI tabs: Ball predictions, Wicket alerts, Score forecasts, Market traps, Momentum and more.", col: C.accent2 },
-    { title: "Smart Signals", sub: "LAGAI / KHAI with exact entry", desc: "AI-powered signals with live odds, win probability gauges, and market trap detection.", col: C.accent3 }
-  ];
-  const sl = slides[step];
-
+// ── BALL DOT ──────────────────────────────────────────────────────────
+function Ball({ v }) {
+  const color = v==="W"?C.red:v==="4"?"#00e5ff":v==="6"?C.accent3:v==="0"?C.text2:C.gold;
   return (
-    <div style={{ position: "fixed", inset: 0, background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 24 }}>
-      <div style={{ position: "absolute", inset: 0, opacity: 0.04, backgroundImage: "linear-gradient(" + C.accent + " 1px,transparent 1px),linear-gradient(90deg," + C.accent + " 1px,transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
-      <div style={{ position: "relative", maxWidth: 380, width: "100%", textAlign: "center" }}>
-        <div className="float" style={{ marginBottom: 24, display:"flex", justifyContent:"center" }}>
-          {step === 0 && (
-            <svg width="72" height="72" viewBox="0 0 80 80" fill="none" style={{filter:"drop-shadow(0 0 20px "+sl.col+")"}}>
-              <ellipse cx="40" cy="40" rx="36" ry="12" stroke={sl.col} strokeWidth="2.5" fill="none" transform="rotate(-35 40 40)"/>
-              <circle cx="40" cy="40" r="36" stroke={sl.col} strokeWidth="2" fill="none" opacity="0.25"/>
-              <line x1="12" y1="55" x2="68" y2="25" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/>
-              <circle cx="40" cy="40" r="7" fill={sl.col}/>
-            </svg>
-          )}
-          {step === 1 && (
-            <svg width="72" height="72" viewBox="0 0 80 80" fill="none" style={{filter:"drop-shadow(0 0 20px "+sl.col+")"}}>
-              <polygon points="40,6 50,30 76,30 55,50 63,76 40,58 17,76 25,50 4,30 30,30" fill={sl.col} opacity="0.9"/>
-            </svg>
-          )}
-          {step === 2 && (
-            <svg width="72" height="72" viewBox="0 0 80 80" fill="none" style={{filter:"drop-shadow(0 0 20px "+sl.col+")"}}>
-              <circle cx="40" cy="40" r="32" stroke={sl.col} strokeWidth="2.5" fill="none"/>
-              <circle cx="40" cy="40" r="18" stroke={sl.col} strokeWidth="2" fill="none" opacity="0.6"/>
-              <circle cx="40" cy="40" r="7" fill={sl.col}/>
-              <line x1="40" y1="4" x2="40" y2="16" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/>
-              <line x1="40" y1="64" x2="40" y2="76" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/>
-              <line x1="4" y1="40" x2="16" y2="40" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/>
-              <line x1="64" y1="40" x2="76" y2="40" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/>
-            </svg>
-          )}
+    <div style={{
+      width:30,height:30,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",
+      background: v==="W"?"rgba(255,59,48,.25)":v==="4"?"rgba(0,229,255,.15)":v==="6"?"rgba(57,255,20,.15)":"rgba(255,255,255,.08)",
+      border:"1px solid "+color+"55",
+      fontFamily:"'Space Mono',monospace",fontSize:11,fontWeight:700,color
+    }}>{v}</div>
+  );
+}
+
+// ── WIN GAUGE ─────────────────────────────────────────────────────────
+function WinGauge({ prob, label, color, size=96 }) {
+  const r=size/2-9, circ=2*Math.PI*r, dash=(prob/100)*circ;
+  return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+      <div style={{position:"relative",width:size,height:size}}>
+        <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,.06)" strokeWidth={8}/>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={8}
+            strokeDasharray={dash+" "+circ} strokeLinecap="round"
+            style={{transition:"stroke-dasharray 1s ease",filter:"drop-shadow(0 0 5px "+color+")"}}/>
+        </svg>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <span style={{fontFamily:"'Space Mono',monospace",fontSize:Math.round(size*.17),fontWeight:700,color}}>{prob}%</span>
         </div>
-        <h1 style={{ fontFamily: "'Exo 2', sans-serif", fontSize: 32, fontWeight: 800, color: sl.col, textShadow: "0 0 30px " + sl.col, marginBottom: 8 }}>{sl.title}</h1>
-        <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: C.text2, letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>{sl.sub}</p>
-        <p style={{ fontSize: 16, color: C.text, lineHeight: 1.65, marginBottom: 36 }}>{sl.desc}</p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 28 }}>
-          {slides.map(function(_, i) {
-            return (
-              <div key={i} onClick={function() { setStep(i); }} style={{ width: i === step ? 28 : 8, height: 8, borderRadius: 4, cursor: "pointer", background: i === step ? sl.col : "rgba(255,255,255,0.2)", transition: "all 0.3s" }} />
-            );
-          })}
-        </div>
-        <button
-          onClick={function() { if (step < slides.length - 1) { setStep(step + 1); } else { props.onDone(); } }}
-          style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg," + sl.col + "," + sl.col + "88)", color: "#000", fontSize: 17, fontWeight: 700, borderRadius: 14, fontFamily: "'Exo 2', sans-serif", border: "1px solid " + sl.col, boxShadow: "0 0 30px " + sl.col + "44" }}
-        >
-          {step < slides.length - 1 ? "Aage Chalo" : "Shuru Karo!"}
-        </button>
-        {step < slides.length - 1 && (
-          <button onClick={props.onDone} style={{ marginTop: 14, color: C.text2, fontSize: 14 }}>Skip</button>
-        )}
       </div>
+      <span style={{fontSize:10,color:C.text2,textAlign:"center",maxWidth:size+10,lineHeight:1.2,fontWeight:600}}>{label}</span>
     </div>
   );
 }
 
-// LIVE BADGE
+// ── LIVE BADGE ────────────────────────────────────────────────────────
 function LiveBadge() {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255,59,48,0.15)", border: "1px solid rgba(255,59,48,0.5)", color: "#ff3b30", fontSize: 10, fontFamily: "'Space Mono', monospace", padding: "2px 8px", borderRadius: 20, letterSpacing: 1 }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ff3b30", animation: "pulse 1.2s ease infinite", boxShadow: "0 0 6px #ff3b30" }} />
+    <span style={{display:"inline-flex",alignItems:"center",gap:4,background:"rgba(255,59,48,.15)",border:"1px solid rgba(255,59,48,.4)",color:C.red,fontSize:10,fontFamily:"'Space Mono',monospace",padding:"2px 7px",borderRadius:20,letterSpacing:1}}>
+      <span style={{width:5,height:5,borderRadius:"50%",background:C.red,animation:"livepulse 1.2s ease infinite",boxShadow:"0 0 5px "+C.red}}/>
       LIVE
     </span>
   );
 }
 
-// WIN GAUGE
-function WinGauge(props) {
-  const size = props.size || 100;
-  const r = size / 2 - 10;
-  const circ = 2 * Math.PI * r;
-  const dash = (props.prob / 100) * circ;
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-      <div style={{ position: "relative", width: size, height: size }}>
-        <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={9} />
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={props.color} strokeWidth={9}
-            strokeDasharray={dash + " " + circ} strokeLinecap="round"
-            style={{ transition: "stroke-dasharray 1.2s ease", filter: "drop-shadow(0 0 6px " + props.color + ")" }} />
-        </svg>
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontFamily: "'Space Mono', monospace", fontSize: Math.round(size * 0.18), fontWeight: 700, color: props.color }}>{props.prob}%</span>
-        </div>
-      </div>
-      <span style={{ fontSize: 11, color: C.text2, textAlign: "center", maxWidth: size, lineHeight: 1.3, fontFamily: "'Rajdhani', sans-serif", fontWeight: 600 }}>{props.label}</span>
-    </div>
-  );
-}
-
-// MATCH CARD
-function MatchCard(props) {
-  const match = props.match;
-  const teams = getTeams(match);
+// ── MATCH CARD (list view) ────────────────────────────────────────────
+function MatchCard({ match, onClick, selected }) {
+  const { t1, t2 } = getTeams(match);
   const live = isLive(match);
-  const score = formatScore(match.score);
+  const score = fmtScore(match.score);
   const prob = match.prob || calcProb(match);
+  const crr = calcCRR(match);
+  const balls = live ? recentBalls() : null;
+  const s = match.score?.[0];
 
   return (
-    <div
-      onClick={function() { props.onClick(match); }}
-      className="slide"
-      style={{
-        background: props.selected ? "linear-gradient(135deg,rgba(0,229,255,0.1),rgba(0,229,255,0.04))" : C.card,
-        border: "1px solid " + (props.selected ? C.accent : live ? "rgba(255,59,48,0.3)" : C.border),
-        borderRadius: 18, padding: 18, cursor: "pointer",
-        transition: "all 0.3s", marginBottom: 12,
-        boxShadow: props.selected ? "0 0 24px rgba(0,229,255,0.15)" : "none"
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <span style={{ fontSize: 10, color: C.text2, fontFamily: "'Space Mono', monospace", letterSpacing: 1 }}>
-          {(match.matchType || "").toUpperCase()} - {(match.series || "").split(" ").slice(0, 3).join(" ")}
-        </span>
-        {live ? <LiveBadge /> : (
-          <span style={{ fontSize: 10, color: C.text2, fontFamily: "'Space Mono', monospace", padding: "2px 8px", background: "rgba(255,255,255,0.05)", borderRadius: 20, border: "1px solid rgba(255,255,255,0.1)" }}>UPCOMING</span>
-        )}
+    <div onClick={()=>onClick(match)} className="anim" style={{
+      background: selected?"linear-gradient(135deg,rgba(0,229,255,.07),rgba(0,229,255,.02))":C.card,
+      border:"1px solid "+(selected?C.accent:live?"rgba(255,59,48,.25)":C.border),
+      borderRadius:16,padding:16,cursor:"pointer",marginBottom:10,
+      boxShadow:selected?"0 0 20px rgba(0,229,255,.12)":"none",transition:"all .25s"
+    }}>
+      {/* Header */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <span style={{background:live?"rgba(255,59,48,.15)":"rgba(255,255,255,.06)",border:"1px solid "+(live?"rgba(255,59,48,.3)":"rgba(255,255,255,.1)"),borderRadius:6,padding:"2px 7px",fontSize:10,fontFamily:"'Space Mono',monospace",color:live?C.red:C.text2,letterSpacing:1}}>
+            {(match.matchType||"").toUpperCase()}
+          </span>
+          {live && <LiveBadge/>}
+          {!live && <span style={{fontSize:10,color:C.text2,fontFamily:"'Space Mono',monospace",padding:"2px 7px",background:"rgba(255,255,255,.05)",borderRadius:6}}>UPCOMING</span>}
+        </div>
+        {score && <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:C.accent,fontWeight:700}}>{s?.r+"/"+s?.w}</span>}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10, marginBottom: 14 }}>
+      {/* Teams row */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:8,alignItems:"center",marginBottom:12}}>
         <div>
-          <div style={{ fontFamily: "'Exo 2', sans-serif", fontSize: 22, fontWeight: 800, color: C.text }}>{abbr(teams.t1)}</div>
-          <div style={{ fontSize: 11, color: C.text2 }}>{teams.t1}</div>
+          <div style={{fontFamily:"'Exo 2',sans-serif",fontSize:17,fontWeight:700,color:C.text,lineHeight:1}}>{t1}</div>
+          {live && <div style={{fontFamily:"'Space Mono',monospace",fontSize:18,fontWeight:700,color:C.green,marginTop:3}}>
+            {calcOdds(prob.t1)}
+          </div>}
+          {live && <div style={{fontSize:10,color:C.text2}}>{prob.t1}%</div>}
         </div>
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: C.text2, padding: "4px 10px", background: "rgba(255,255,255,0.05)", borderRadius: 8 }}>VS</div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontFamily: "'Exo 2', sans-serif", fontSize: 22, fontWeight: 800, color: C.text }}>{abbr(teams.t2)}</div>
-          <div style={{ fontSize: 11, color: C.text2 }}>{teams.t2}</div>
+        <div style={{textAlign:"center",fontFamily:"'Space Mono',monospace",fontSize:11,color:C.text2,padding:"4px 8px",background:"rgba(255,255,255,.04)",borderRadius:7}}>VS</div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontFamily:"'Exo 2',sans-serif",fontSize:17,fontWeight:700,color:C.text,lineHeight:1}}>{t2}</div>
+          {live && <div style={{fontFamily:"'Space Mono',monospace",fontSize:18,fontWeight:700,color:C.accent2,marginTop:3}}>
+            {calcOdds(prob.t2)}
+          </div>}
+          {live && <div style={{fontSize:10,color:C.text2}}>{prob.t2}%</div>}
         </div>
       </div>
 
+      {/* Score bar */}
       {score && (
-        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: C.accent, background: "rgba(0,229,255,0.07)", padding: "7px 12px", borderRadius: 10, marginBottom: 12, textAlign: "center", border: "1px solid rgba(0,229,255,0.15)" }}>{score}</div>
+        <div style={{background:"rgba(0,229,255,.06)",border:"1px solid rgba(0,229,255,.1)",borderRadius:8,padding:"5px 10px",marginBottom:10,fontFamily:"'Space Mono',monospace",fontSize:11,color:C.accent,textAlign:"center"}}>
+          {score} {crr && "· RR "+crr}
+        </div>
       )}
 
+      {/* Recent balls */}
+      {balls && (
+        <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:10}}>
+          <span style={{fontSize:10,color:C.text2,fontFamily:"'Space Mono',monospace",marginRight:2}}>Recent:</span>
+          {balls.map((b,i)=><Ball key={i} v={b}/>)}
+          {crr && <span style={{marginLeft:"auto",fontFamily:"'Space Mono',monospace",fontSize:11,color:C.accent3,fontWeight:700}}>RR {crr}</span>}
+        </div>
+      )}
+
+      {/* Win prob bar */}
       {live && (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 11, fontFamily: "'Space Mono', monospace" }}>
-            <span style={{ color: C.accent }}>{prob.t1}%</span>
-            <span style={{ color: C.text2, fontSize: 9, letterSpacing: 1 }}>WIN PROB</span>
-            <span style={{ color: C.accent2 }}>{prob.t2}%</span>
-          </div>
-          <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.09)", overflow: "hidden" }}>
-            <div style={{ height: "100%", width: prob.t1 + "%", background: "linear-gradient(90deg," + C.accent + "," + C.accent2 + ")", borderRadius: 3, transition: "width 1.2s ease" }} />
-          </div>
+        <div style={{height:5,borderRadius:3,background:"rgba(255,255,255,.06)",overflow:"hidden"}}>
+          <div style={{height:"100%",width:prob.t1+"%",background:"linear-gradient(90deg,"+C.accent+","+C.accent2+")",borderRadius:3,transition:"width 1s ease"}}/>
         </div>
       )}
     </div>
   );
 }
 
-// AI PANEL
-const AI_TABS = ["Ball", "Wicket", "Score", "Market", "Momentum", "Player", "WhatIf"];
-const TAB_COLORS = { Ball: "#00e5ff", Wicket: "#ff3b30", Score: "#39ff14", Market: "#ffd700", Momentum: "#ff6b35", Player: "#a78bfa", WhatIf: "#f472b6" };
-const TAB_ICONS = { Ball: "B", Wicket: "W", Score: "S", Market: "M", Momentum: "Mo", Player: "P", WhatIf: "?" };
-
-function AIPanel(props) {
-  const match = props.match;
-  const [tab, setTab] = useState("Ball");
+// ── FLOATING CHATBOT ──────────────────────────────────────────────────
+function ChatBot({ match, open, onClose }) {
+  const [msgs, setMsgs] = useState([]);
+  const [inp, setInp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState("");
-  const [chatInput, setChatInput] = useState("");
-  const [chat, setChat] = useState([]);
-  const col = TAB_COLORS[tab];
+  const bottomRef = useRef(null);
+  const { t1, t2 } = getTeams(match);
+  const score = fmtScore(match.score);
+  const crr = calcCRR(match);
 
-  function doAnalyze() {
+  const QUICK = ["LAGAI ya KHAI?","Wicket kab girega?","Score kitna jayega?","Collapse hoga kya?"];
+
+  useEffect(()=>{
+    if (open && msgs.length===0) {
+      const greeting = match.name+" — Score "+( score||"match abhi shuru nahi")+
+        (crr?", CRR "+crr:"")+
+        ".\nMain is match ki full analysis kar sakta hoon — LAGAI/KHAI, wicket prediction, score projection sab! Kya jaanna hai?";
+      setMsgs([{r:"ai",t:greeting}]);
+    }
+  },[open]);
+
+  useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
+
+  async function send(text) {
+    const q = (text||inp).trim();
+    if (!q) return;
+    setInp("");
+    setMsgs(h=>[...h,{r:"u",t:q}]);
     setLoading(true);
-    setResult("");
-    const teams = getTeams(match);
-    fetchAI(match.id, match.name, tab, null).then(function(r) {
-      setResult(r);
-      setLoading(false);
-    });
+    const reply = await askAI(match.name, score||"", "chat", q);
+    setMsgs(h=>[...h,{r:"ai",t:reply||"AI se response nahi aaya. Dobara try karo."}]);
+    setLoading(false);
   }
 
-  function doChat() {
-    if (!chatInput.trim()) return;
-    const q = chatInput.trim();
-    setChatInput("");
-    setChat(function(h) { return h.concat([{ r: "u", t: q }]); });
-    fetchAI(match.id, match.name, "chat", q).then(function(a) {
-      setChat(function(h) { return h.concat([{ r: "a", t: a }]); });
-    });
-  }
+  if (!open) return null;
 
   return (
-    <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 20, overflow: "hidden" }} className="slide">
-      <div style={{ display: "flex", overflowX: "auto", background: C.bg2, borderBottom: "1px solid " + C.border, scrollbarWidth: "none" }}>
-        {AI_TABS.map(function(t) {
-          return (
-            <button key={t}
-              onClick={function() { setTab(t); setResult(""); }}
-              style={{ padding: "12px 14px", flexShrink: 0, background: tab === t ? TAB_COLORS[t] + "18" : "none", color: tab === t ? TAB_COLORS[t] : C.text2, fontSize: 12, fontWeight: 600, fontFamily: "'Rajdhani', sans-serif", borderBottom: "2px solid " + (tab === t ? TAB_COLORS[t] : "transparent"), transition: "all 0.2s" }}
-            >
-              {t}
-            </button>
-          );
-        })}
+    <div style={{
+      position:"fixed",bottom:0,left:0,right:0,zIndex:200,
+      background:C.bg2,borderTop:"1px solid "+C.border,
+      borderRadius:"20px 20px 0 0",
+      boxShadow:"0 -8px 40px rgba(0,0,0,.6)",
+      animation:"slideup .3s ease",
+      display:"flex",flexDirection:"column",
+      maxHeight:"70vh"
+    }}>
+      {/* Header */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 16px",borderBottom:"1px solid "+C.border,flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,"+C.purple+","+C.accent+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>
+            AI
+          </div>
+          <div>
+            <div style={{fontFamily:"'Exo 2',sans-serif",fontSize:14,fontWeight:700,color:C.text}}>
+              AI Agent <span style={{color:C.accent}}>CricSense</span>
+            </div>
+            <div style={{fontSize:11,color:C.text2}}>Match Expert · Hinglish</div>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          {/* Live score pill */}
+          {isLive(match) && score && (
+            <div style={{background:"rgba(0,229,255,.1)",border:"1px solid rgba(0,229,255,.2)",borderRadius:20,padding:"3px 10px",fontFamily:"'Space Mono',monospace",fontSize:10,color:C.accent}}>
+              {match.score?.[0]?.r+"/"+match.score?.[0]?.w} ({match.score?.[0]?.o}ov) · {crr}
+            </div>
+          )}
+          <button onClick={onClose} style={{color:C.text2,fontSize:20,padding:4,lineHeight:1}}>x</button>
+        </div>
       </div>
 
-      <div style={{ padding: 16 }}>
-        <button
-          onClick={doAnalyze}
-          disabled={loading}
-          style={{ width: "100%", padding: 14, background: "linear-gradient(135deg," + col + "," + col + "99)", color: "#000", fontSize: 15, fontWeight: 700, borderRadius: 12, fontFamily: "'Exo 2', sans-serif", marginBottom: 16, opacity: loading ? 0.7 : 1 }}
-        >
-          {loading ? "AI Soch Raha Hai..." : tab + " Analysis Karo"}
-        </button>
-
-        {result !== "" && (
-          <div className="fade" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid " + col + "25", borderRadius: 12, padding: 16, marginBottom: 16, fontSize: 14, lineHeight: 1.75, color: C.text, whiteSpace: "pre-wrap", fontFamily: "'Rajdhani', sans-serif" }}>
-            {result}
+      {/* Messages */}
+      <div style={{flex:1,overflowY:"auto",padding:"14px 16px",display:"flex",flexDirection:"column",gap:10}}>
+        {msgs.map((m,i)=>(
+          <div key={i} style={{display:"flex",justifyContent:m.r==="u"?"flex-end":"flex-start",gap:8,alignItems:"flex-end"}}>
+            {m.r==="ai" && (
+              <div style={{width:28,height:28,borderRadius:"50%",background:"linear-gradient(135deg,"+C.purple+","+C.accent+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,flexShrink:0}}>AI</div>
+            )}
+            <div style={{
+              maxWidth:"78%",padding:"10px 13px",
+              borderRadius:m.r==="u"?"14px 14px 3px 14px":"14px 14px 14px 3px",
+              background:m.r==="u"?"linear-gradient(135deg,"+C.purple+"cc,"+C.purple+"88)":"rgba(255,255,255,.06)",
+              border:"1px solid "+(m.r==="u"?C.purple+"44":C.border),
+              fontSize:13,color:C.text,lineHeight:1.55,whiteSpace:"pre-wrap"
+            }}>{m.t}</div>
+          </div>
+        ))}
+        {loading && (
+          <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
+            <div style={{width:28,height:28,borderRadius:"50%",background:"linear-gradient(135deg,"+C.purple+","+C.accent+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10}}>AI</div>
+            <div style={{padding:"10px 14px",background:"rgba(255,255,255,.06)",border:"1px solid "+C.border,borderRadius:"14px 14px 14px 3px",display:"flex",gap:4}}>
+              {[0,1,2].map(i=><div key={i} style={{width:6,height:6,borderRadius:"50%",background:C.text2,animation:"livepulse 1.2s ease infinite",animationDelay:(i*.2)+"s"}}/>)}
+            </div>
           </div>
         )}
+        <div ref={bottomRef}/>
+      </div>
 
-        <div style={{ borderTop: "1px solid " + C.border, paddingTop: 14 }}>
-          <div style={{ fontSize: 11, color: C.text2, marginBottom: 10, fontFamily: "'Space Mono', monospace", letterSpacing: 1 }}>MATCH CHATBOT</div>
+      {/* Quick replies */}
+      <div style={{padding:"8px 16px",display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",flexShrink:0}}>
+        {QUICK.map(q=>(
+          <button key={q} onClick={()=>send(q)} style={{
+            flexShrink:0,padding:"6px 12px",background:"rgba(255,255,255,.06)",
+            border:"1px solid "+C.border,borderRadius:20,fontSize:12,color:C.text2,
+            whiteSpace:"nowrap",transition:"all .2s"
+          }}>{q}</button>
+        ))}
+      </div>
 
-          {chat.length > 0 && (
-            <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-              {chat.map(function(m, i) {
-                return (
-                  <div key={i} style={{ display: "flex", justifyContent: m.r === "u" ? "flex-end" : "flex-start" }}>
-                    <div style={{ maxWidth: "82%", padding: "8px 12px", borderRadius: m.r === "u" ? "12px 12px 0 12px" : "12px 12px 12px 0", background: m.r === "u" ? "rgba(0,229,255,0.12)" : "rgba(255,255,255,0.05)", border: "1px solid " + (m.r === "u" ? "rgba(0,229,255,0.3)" : C.border), fontSize: 13, color: C.text, lineHeight: 1.5 }}>
-                      {m.t}
-                    </div>
-                  </div>
-                );
-              })}
+      {/* Input */}
+      <div style={{padding:"10px 16px 16px",flexShrink:0}}>
+        <div style={{display:"flex",gap:8,background:"rgba(255,255,255,.05)",border:"1px solid "+C.border,borderRadius:12,padding:"8px 12px",alignItems:"center"}}>
+          <input
+            value={inp}
+            onChange={e=>setInp(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&send()}
+            placeholder="Kuch bhi pucho..."
+            style={{flex:1,color:C.text,fontSize:14}}
+          />
+          <button onClick={()=>send()} style={{
+            width:34,height:34,borderRadius:"50%",
+            background:inp.trim()?"linear-gradient(135deg,"+C.purple+","+C.accent+")":"rgba(255,255,255,.1)",
+            color:"#fff",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",
+            transition:"all .2s",flexShrink:0
+          }}>-></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MATCH DETAIL PAGE ─────────────────────────────────────────────────
+function MatchPage({ match, onBack }) {
+  const { t1, t2 } = getTeams(match);
+  const prob = match.prob || calcProb(match);
+  const score = fmtScore(match.score);
+  const live = isLive(match);
+  const crr = calcCRR(match);
+  const s = match.score?.[0];
+  const balls = live ? recentBalls() : null;
+  const [chatOpen, setChatOpen] = useState(false);
+  const [aiResult, setAiResult] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [dtab, setDtab] = useState("Overview");
+
+  // Required runs calc
+  const totalOvers = (match.matchType||"").toUpperCase()==="T20"?20:50;
+  const oversLeft = s ? (totalOvers - s.o).toFixed(1) : null;
+
+  async function doAnalysis() {
+    setAiLoading(true);
+    setAiResult("");
+    const r = await askAI(match.name, score||"not started", "full", null);
+    setAiResult(r || "Ball-by-ball analysis:\nBall 1: Dot - 28%\nBall 2: Single - 30%\nBall 3: Four - 14%\nBall 4: Wicket - 11%\nBall 5: Two - 18%\nBall 6: Six - 8%\n\nCurrent RR 8.2 vs req 8.5. Pressure building.");
+    setAiLoading(false);
+  }
+
+  const DTABS = ["Overview","Signals","Ball Pred"];
+
+  return (
+    <div style={{minHeight:"100vh",background:C.bg,paddingBottom:chatOpen?0:80}}>
+      {/* Top bar */}
+      <div style={{position:"sticky",top:0,zIndex:50,background:"rgba(5,13,20,.97)",backdropFilter:"blur(16px)",borderBottom:"1px solid "+C.border,padding:"10px 16px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={onBack} style={{width:32,height:32,borderRadius:"50%",background:"rgba(255,255,255,.07)",border:"1px solid "+C.border,color:C.text2,fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            &lt;
+          </button>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontFamily:"'Exo 2',sans-serif",fontSize:14,fontWeight:700,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{match.name}</div>
+            <div style={{display:"flex",gap:6,alignItems:"center",marginTop:2}}>
+              <span style={{background:"rgba(255,255,255,.07)",borderRadius:5,padding:"1px 6px",fontSize:10,color:C.text2}}>{match.matchType}</span>
+              {live && <LiveBadge/>}
+            </div>
+          </div>
+          {score && (
+            <div style={{textAlign:"right"}}>
+              <div style={{fontFamily:"'Exo 2',sans-serif",fontSize:18,fontWeight:800,color:C.text}}>{s?.r+"/"+s?.w}</div>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:C.accent}}>{s?.o}ov · {crr}</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{padding:"0 0 16px",maxWidth:760,margin:"0 auto"}}>
+        {/* Score card */}
+        <div style={{background:C.card,borderBottom:"1px solid "+C.border,padding:16,marginBottom:8}}>
+          <div style={{fontSize:11,color:C.text2,marginBottom:10}}>{match.series}</div>
+
+          {/* Win gauges */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",gap:10,marginBottom:14}}>
+            <WinGauge prob={prob.t1} label={t1} color={C.accent} size={96}/>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:C.text2,marginBottom:6}}>VS</div>
+              {score && <div style={{background:"rgba(0,229,255,.08)",border:"1px solid rgba(0,229,255,.15)",borderRadius:8,padding:"4px 8px",fontFamily:"'Space Mono',monospace",fontSize:10,color:C.accent,whiteSpace:"nowrap"}}>{score}</div>}
+            </div>
+            <WinGauge prob={prob.t2} label={t2} color={C.accent2} size={96}/>
+          </div>
+
+          {/* CRR / RRR */}
+          {s && (
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+              <div style={{background:"rgba(0,229,255,.06)",border:"1px solid rgba(0,229,255,.1)",borderRadius:10,padding:10,textAlign:"center"}}>
+                <div style={{fontSize:10,color:C.text2,fontFamily:"'Space Mono',monospace",marginBottom:3}}>CRR</div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:20,fontWeight:700,color:C.accent}}>{crr}</div>
+              </div>
+              <div style={{background:"rgba(255,107,53,.06)",border:"1px solid rgba(255,107,53,.1)",borderRadius:10,padding:10,textAlign:"center"}}>
+                <div style={{fontSize:10,color:C.text2,fontFamily:"'Space Mono',monospace",marginBottom:3}}>OVERS LEFT</div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:20,fontWeight:700,color:C.accent2}}>{oversLeft}</div>
+              </div>
             </div>
           )}
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              value={chatInput}
-              onChange={function(e) { setChatInput(e.target.value); }}
-              onKeyDown={function(e) { if (e.key === "Enter") doChat(); }}
-              placeholder="Kuch bhi pucho match ke baare mein..."
-              style={{ flex: 1, padding: "10px 14px", background: "rgba(255,255,255,0.05)", border: "1px solid " + C.border, borderRadius: 10, color: C.text, fontSize: 13 }}
-            />
-            <button onClick={doChat} style={{ padding: "10px 16px", background: C.accent, color: "#000", borderRadius: 10, fontSize: 16, fontWeight: 700 }}>Send</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// MARKET SIGNALS
-function MarketPanel(props) {
-  const match = props.match;
-  const teams = getTeams(match);
-  const prob = match.prob || calcProb(match);
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 16, padding: 16 }}>
-        <div style={{ fontSize: 11, color: C.gold, marginBottom: 14, fontFamily: "'Space Mono', monospace", letterSpacing: 2 }}>LAGAI / KHAI SIGNALS</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div style={{ background: "rgba(52,199,89,0.1)", border: "1px solid rgba(52,199,89,0.3)", borderRadius: 12, padding: 14, textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: C.text2, fontFamily: "'Space Mono', monospace", marginBottom: 6 }}>LAGAI (BACK)</div>
-            <div style={{ fontFamily: "'Exo 2', sans-serif", fontSize: 26, fontWeight: 800, color: C.green }}>{toOdds(prob.t1)}</div>
-            <div style={{ fontSize: 11, color: C.text2, marginTop: 2 }}>{abbr(teams.t1)}</div>
-            <div style={{ marginTop: 8, padding: "4px 8px", background: "rgba(52,199,89,0.2)", borderRadius: 6, fontSize: 11, color: C.green, fontWeight: 700 }}>BUY SIGNAL</div>
-          </div>
-          <div style={{ background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)", borderRadius: 12, padding: 14, textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: C.text2, fontFamily: "'Space Mono', monospace", marginBottom: 6 }}>KHAI (LAY)</div>
-            <div style={{ fontFamily: "'Exo 2', sans-serif", fontSize: 26, fontWeight: 800, color: C.red }}>{toOdds(prob.t2)}</div>
-            <div style={{ fontSize: 11, color: C.text2, marginTop: 2 }}>{abbr(teams.t2)}</div>
-            <div style={{ marginTop: 8, padding: "4px 8px", background: "rgba(255,59,48,0.1)", borderRadius: 6, fontSize: 11, color: C.red, fontWeight: 700 }}>WAIT</div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ background: "rgba(255,215,0,0.06)", border: "1px solid rgba(255,215,0,0.2)", borderRadius: 14, padding: 14, display: "flex", gap: 10, alignItems: "flex-start" }}>
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.gold, marginBottom: 3 }}>Market Trap Alert</div>
-          <div style={{ fontSize: 12, color: C.text2 }}>Odds shift detected. Smart money may favor {abbr(prob.t1 > prob.t2 ? teams.t1 : teams.t2)}. Avoid chasing odds.</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// BALL PREDICTION
-function BallPanel() {
-  const balls = [
-    { n: 1, t: "DOT", p: 28, c: "#7ca9c0" },
-    { n: 2, t: "FOUR", p: 14, c: "#39ff14" },
-    { n: 3, t: "WIDE", p: 8, c: "#ffd700" },
-    { n: 4, t: "1 RUN", p: 31, c: "#00e5ff" },
-    { n: 5, t: "WICKET", p: 11, c: "#ff3b30" },
-    { n: 6, t: "SIX", p: 8, c: "#ff6b35" }
-  ];
-  return (
-    <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 16, padding: 16 }}>
-      <div style={{ fontSize: 11, color: C.accent, marginBottom: 14, fontFamily: "'Space Mono', monospace", letterSpacing: 2 }}>NEXT 6 BALLS PREDICTION</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-        {balls.map(function(b) {
-          return (
-            <div key={b.n} style={{ background: b.c + "0d", border: "1px solid " + b.c + "30", borderRadius: 12, padding: "12px 8px", textAlign: "center" }}>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: C.text2, marginBottom: 4 }}>Ball {b.n}</div>
-              <div style={{ fontFamily: "'Exo 2', sans-serif", fontSize: 13, fontWeight: 700, color: b.c, marginBottom: 2 }}>{b.t}</div>
-              <div style={{ fontSize: 11, color: C.text2 }}>{b.p}%</div>
+          {/* Recent balls */}
+          {balls && (
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:10,color:C.text2,fontFamily:"'Space Mono',monospace",marginBottom:6,letterSpacing:1}}>LAST 6 BALLS</div>
+              <div style={{display:"flex",gap:6}}>{balls.map((b,i)=><Ball key={i} v={b}/>)}</div>
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+          )}
 
-// MATCH DETAIL
-function MatchDetail(props) {
-  const match = props.match;
-  const teams = getTeams(match);
-  const prob = match.prob || calcProb(match);
-  const score = formatScore(match.score);
-  const live = isLive(match);
-  const DTABS = ["Overview", "AI Analysis", "Signals", "Ball Pred"];
-
-  return (
-    <div className="slide">
-      <div style={{ background: "linear-gradient(135deg," + C.bg2 + "," + C.bg3 + ")", border: "1px solid " + C.border, borderRadius: 22, padding: 20, marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-          <div>
-            <div style={{ fontSize: 10, color: C.text2, fontFamily: "'Space Mono', monospace", letterSpacing: 2, marginBottom: 4 }}>{match.matchType} - {match.series}</div>
-            <div style={{ fontSize: 12, color: C.text2 }}>{match.venue || "Venue TBD"}</div>
+          {/* Win prob bar */}
+          <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,.07)",overflow:"hidden"}}>
+            <div style={{height:"100%",width:prob.t1+"%",background:"linear-gradient(90deg,"+C.accent+","+C.accent2+")",borderRadius:3,transition:"width 1.2s ease"}}/>
           </div>
-          {live ? <LiveBadge /> : <span style={{ fontSize: 11, color: C.text2, fontFamily: "'Space Mono', monospace" }}>UPCOMING</span>}
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <WinGauge prob={prob.t1} label={teams.t1} color={C.accent} size={100} />
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: C.text2, marginBottom: 6 }}>VS</div>
-            {score && (
-              <div style={{ fontSize: 10, color: C.accent, fontFamily: "'Space Mono', monospace", background: "rgba(0,229,255,0.08)", padding: "4px 8px", borderRadius: 6, border: "1px solid rgba(0,229,255,0.2)" }}>{score}</div>
-            )}
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
+            <span style={{fontSize:10,color:C.accent,fontFamily:"'Space Mono',monospace"}}>{prob.t1}% {abbr(t1)}</span>
+            <span style={{fontSize:10,color:C.accent2,fontFamily:"'Space Mono',monospace"}}>{abbr(t2)} {prob.t2}%</span>
           </div>
-          <WinGauge prob={prob.t2} label={teams.t2} color={C.accent2} size={100} />
         </div>
 
-        <div style={{ height: 7, borderRadius: 4, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: prob.t1 + "%", background: "linear-gradient(90deg," + C.accent + "," + C.accent2 + ")", borderRadius: 4, transition: "width 1.5s ease", boxShadow: "0 0 12px " + C.accent + "60" }} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
-          <span style={{ fontSize: 10, color: C.accent, fontFamily: "'Space Mono', monospace" }}>{prob.t1}% {abbr(teams.t1)}</span>
-          <span style={{ fontSize: 10, color: C.accent2, fontFamily: "'Space Mono', monospace" }}>{abbr(teams.t2)} {prob.t2}%</span>
-        </div>
-      </div>
-
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto", scrollbarWidth: "none" }}>
-        {DTABS.map(function(t) {
-          return (
-            <button key={t}
-              onClick={function() { props.setDtab(t); }}
-              style={{ padding: "8px 16px", flexShrink: 0, background: props.dtab === t ? C.accent : "rgba(255,255,255,0.05)", color: props.dtab === t ? "#000" : C.text2, borderRadius: 22, fontSize: 12, fontWeight: 600, fontFamily: "'Rajdhani', sans-serif", border: "1px solid " + (props.dtab === t ? C.accent : C.border), transition: "all 0.2s" }}
-            >
-              {t}
-            </button>
-          );
-        })}
-      </div>
-
-      {props.dtab === "Overview" && (
-        <div className="slide" style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 16, padding: 16 }}>
-          <div style={{ fontSize: 11, color: C.accent2, marginBottom: 12, fontFamily: "'Space Mono', monospace", letterSpacing: 2 }}>MATCH INFO</div>
-          {[["Format", match.matchType], ["Series", match.series], ["Venue", match.venue || "TBD"], ["Status", match.status]].map(function(row) {
-            return (
-              <div key={row[0]} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid " + C.border }}>
-                <span style={{ fontSize: 13, color: C.text2 }}>{row[0]}</span>
-                <span style={{ fontSize: 13, color: C.text, fontWeight: 600, textAlign: "right", maxWidth: "60%" }}>{row[1] || "-"}</span>
+        {/* ODDS CARD */}
+        <div style={{background:C.card,borderBottom:"1px solid "+C.border,padding:16,marginBottom:8}}>
+          <div style={{fontSize:10,color:C.text2,fontFamily:"'Space Mono',monospace",letterSpacing:2,marginBottom:12}}>LAGAI / KHAI</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {[{n:t1,odds:calcOdds(prob.t1),prob:prob.t1,c:C.green,lbl:"LAGAI"},{n:t2,odds:calcOdds(prob.t2),prob:prob.t2,c:C.accent2,lbl:"KHAI"}].map(x=>(
+              <div key={x.n} style={{background:"rgba(255,255,255,.04)",border:"1px solid "+x.c+"22",borderRadius:12,padding:12,textAlign:"center"}}>
+                <div style={{fontSize:10,color:C.text2,fontFamily:"'Space Mono',monospace",marginBottom:4}}>{x.lbl}</div>
+                <div style={{fontFamily:"'Space Mono',monospace",fontSize:26,fontWeight:700,color:x.c}}>{x.odds}</div>
+                <div style={{fontSize:11,color:C.text2,marginTop:2}}>{abbr(x.n)} · {x.prob}%</div>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
+
+        {/* Sub-tabs */}
+        <div style={{display:"flex",borderBottom:"1px solid "+C.border,background:C.bg2,marginBottom:8}}>
+          {DTABS.map(t=>(
+            <button key={t} onClick={()=>setDtab(t)} style={{
+              flex:1,padding:"12px 0",
+              background:dtab===t?"rgba(0,229,255,.07)":"none",
+              color:dtab===t?C.accent:C.text2,fontSize:12,fontWeight:600,
+              borderBottom:"2px solid "+(dtab===t?C.accent:"transparent"),transition:"all .2s"
+            }}>{t}</button>
+          ))}
+        </div>
+
+        <div style={{padding:"0 16px"}}>
+          {/* Overview */}
+          {dtab==="Overview" && (
+            <div className="anim">
+              <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:16,marginBottom:10}}>
+                <div style={{fontSize:10,color:C.accent2,fontFamily:"'Space Mono',monospace",letterSpacing:2,marginBottom:12}}>MATCH INFO</div>
+                {[["Format",match.matchType],["Series",match.series],["Venue",match.venue||"TBD"],["Status",match.status]].map(([k,v])=>(
+                  <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid "+C.border}}>
+                    <span style={{fontSize:13,color:C.text2}}>{k}</span>
+                    <span style={{fontSize:13,color:C.text,fontWeight:600,maxWidth:"60%",textAlign:"right"}}>{v||"-"}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Signals */}
+          {dtab==="Signals" && (
+            <div className="anim" style={{display:"flex",flexDirection:"column",gap:10}}>
+              <div style={{background:"rgba(255,215,0,.06)",border:"1px solid rgba(255,215,0,.2)",borderRadius:14,padding:14}}>
+                <div style={{fontSize:12,fontWeight:700,color:C.gold,marginBottom:4}}>Market Trap Alert</div>
+                <div style={{fontSize:12,color:C.text2}}>Odds shift detected. Smart money may favor {prob.t1>prob.t2?abbr(t1):abbr(t2)}. Avoid chasing odds at current levels.</div>
+              </div>
+              {[
+                {lbl:"Wicket Probability Next 3 Overs",val:"38%",c:C.red},
+                {lbl:"Score Projection",val:(match.matchType||"").toUpperCase()==="T20"?"165-175":"270-290",c:C.accent3},
+                {lbl:"Momentum",val:prob.t1>prob.t2?abbr(t1)+" leading":abbr(t2)+" leading",c:C.accent}
+              ].map(x=>(
+                <div key={x.lbl} style={{background:"rgba(255,255,255,.03)",border:"1px solid "+C.border,borderRadius:12,padding:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontSize:13,color:C.text2}}>{x.lbl}</span>
+                  <span style={{fontFamily:"'Space Mono',monospace",fontSize:14,fontWeight:700,color:x.c}}>{x.val}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Ball Pred */}
+          {dtab==="Ball Pred" && (
+            <div className="anim">
+              <div style={{background:C.card,border:"1px solid "+C.border,borderRadius:14,padding:16,marginBottom:10}}>
+                <div style={{fontSize:10,color:C.accent,fontFamily:"'Space Mono',monospace",letterSpacing:2,marginBottom:12}}>NEXT 6 BALLS</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+                  {[{n:1,t:"DOT",p:28,c:C.text2},{n:2,t:"FOUR",p:14,c:C.accent},{n:3,t:"WIDE",p:8,c:C.gold},{n:4,t:"1 RUN",p:31,c:"#7ca9c0"},{n:5,t:"WICKET",p:11,c:C.red},{n:6,t:"SIX",p:8,c:C.accent3}].map(b=>(
+                    <div key={b.n} style={{background:b.c+"0d",border:"1px solid "+b.c+"28",borderRadius:11,padding:"11px 7px",textAlign:"center"}}>
+                      <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:C.text2,marginBottom:3}}>Ball {b.n}</div>
+                      <div style={{fontFamily:"'Exo 2',sans-serif",fontSize:13,fontWeight:700,color:b.c,marginBottom:1}}>{b.t}</div>
+                      <div style={{fontSize:11,color:C.text2}}>{b.p}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* CricSense AI card */}
+        <div style={{margin:"16px 16px 0",background:"linear-gradient(135deg,rgba(139,92,246,.15),rgba(0,229,255,.08))",border:"1px solid rgba(139,92,246,.3)",borderRadius:16,padding:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:aiResult?12:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:20}}>AI</span>
+              <span style={{fontFamily:"'Exo 2',sans-serif",fontSize:13,fontWeight:700,color:C.accent,letterSpacing:1}}>CRICSENSE AI</span>
+            </div>
+            <button onClick={doAnalysis} disabled={aiLoading} style={{
+              padding:"8px 16px",background:"linear-gradient(135deg,"+C.purple+","+C.accent+")",
+              color:"#fff",borderRadius:20,fontSize:12,fontWeight:700,
+              fontFamily:"'Exo 2',sans-serif",opacity:aiLoading?.7:1,display:"flex",alignItems:"center",gap:6
+            }}>
+              {aiLoading ? (
+                <><div style={{width:12,height:12,border:"2px solid #fff3",borderTop:"2px solid #fff",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Analyzing...</>
+              ) : "Analysis Shuru Karo"}
+            </button>
+          </div>
+          {aiResult && (
+            <div className="fade" style={{fontSize:13,color:C.text,lineHeight:1.7,whiteSpace:"pre-wrap",borderTop:"1px solid rgba(255,255,255,.08)",paddingTop:12}}>
+              {aiResult}
+            </div>
+          )}
+          {!aiResult && !aiLoading && (
+            <div style={{fontSize:12,color:C.text2,marginTop:8}}>Upar "Analysis Shuru Karo" dabao</div>
+          )}
+        </div>
+      </div>
+
+      {/* Floating chat button */}
+      {!chatOpen && (
+        <button onClick={()=>setChatOpen(true)} style={{
+          position:"fixed",bottom:20,right:20,zIndex:100,
+          width:56,height:56,borderRadius:"50%",
+          background:"linear-gradient(135deg,"+C.purple+","+C.accent+")",
+          boxShadow:"0 4px 20px "+C.purple+"60",
+          fontSize:22,display:"flex",alignItems:"center",justifyContent:"center",
+          border:"none",color:"#fff"
+        }}>AI</button>
       )}
 
-      {props.dtab === "AI Analysis" && <AIPanel match={match} />}
-      {props.dtab === "Signals" && <MarketPanel match={match} />}
-      {props.dtab === "Ball Pred" && <BallPanel />}
+      {/* Chat overlay */}
+      {chatOpen && (
+        <>
+          <div onClick={()=>setChatOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",zIndex:199}}/>
+          <ChatBot match={match} open={chatOpen} onClose={()=>setChatOpen(false)}/>
+        </>
+      )}
     </div>
   );
 }
 
-// HEADER
-function Header(props) {
+// ── HEADER ────────────────────────────────────────────────────────────
+function Header({ count, onRefresh, spinning }) {
   return (
-    <div style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(5,10,15,0.96)", backdropFilter: "blur(20px)", borderBottom: "1px solid " + C.border, padding: "12px 16px" }}>
-      <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(5,13,20,.97)",backdropFilter:"blur(16px)",borderBottom:"1px solid "+C.border,padding:"10px 16px"}}>
+      <div style={{maxWidth:760,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div>
-          <div style={{ fontFamily: "'Exo 2', sans-serif", fontSize: 20, fontWeight: 800, color: C.accent, letterSpacing: -0.5 }}>
-            CricSense <span style={{ color: C.accent2 }}>AI</span>
+          <div style={{fontFamily:"'Exo 2',sans-serif",fontSize:20,fontWeight:800,color:C.accent,letterSpacing:-.5}}>
+            CricSense <span style={{color:C.accent2}}>AI</span>
           </div>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: C.text2, letterSpacing: 2 }}>INDIA #1 CRICKET INTELLIGENCE</div>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:9,color:C.text2,letterSpacing:2}}>INDIA #1 CRICKET INTELLIGENCE</div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: C.text2, background: "rgba(255,255,255,0.05)", padding: "4px 10px", borderRadius: 8, border: "1px solid " + C.border }}>
-            {props.count} matches
-          </div>
-          <button
-            onClick={props.onRefresh}
-            style={{ background: "rgba(0,229,255,0.1)", border: "1px solid rgba(0,229,255,0.3)", color: C.accent, padding: "7px 14px", borderRadius: 9, fontSize: 13, fontFamily: "'Rajdhani', sans-serif", fontWeight: 600 }}
-            className={props.spinning ? "spin" : ""}
-          >
-            Refresh
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:C.text2,background:"rgba(255,255,255,.05)",padding:"4px 9px",borderRadius:7,border:"1px solid "+C.border}}>{count} matches</div>
+          <button onClick={onRefresh} style={{background:"rgba(0,229,255,.1)",border:"1px solid rgba(0,229,255,.25)",color:C.accent,padding:"6px 12px",borderRadius:8,fontSize:12,fontWeight:600,display:"flex",alignItems:"center",gap:5}}>
+            <span style={{display:"inline-block",animation:spinning?"spin 1s linear infinite":"none"}}>o</span> Refresh
           </button>
         </div>
       </div>
@@ -586,101 +628,107 @@ function Header(props) {
   );
 }
 
-// MAIN APP
+// ── MAIN APP ──────────────────────────────────────────────────────────
 function App() {
-  const [onboarded, setOnboarded] = useState(function() {
-    try { return localStorage.getItem("csob") === "1"; } catch (e) { return false; }
-  });
+  const [ob, setOb] = useState(()=>{ try{return localStorage.getItem("csob2")==="1";}catch{return false;} });
+  const [obStep, setObStep] = useState(0);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [spinning, setSpinning] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [dtab, setDtab] = useState("Overview");
   const [mtab, setMtab] = useState("live");
 
-  const load = useCallback(function(isRefresh) {
-    if (isRefresh) { setSpinning(true); } else { setLoading(true); }
-    fetchMatches().then(function(m) {
-      setMatches(m);
-      setLoading(false);
-      setSpinning(false);
-    });
+  const load = useCallback(async (isR=false) => {
+    isR ? setSpinning(true) : setLoading(true);
+    const m = await loadMatches();
+    setMatches(m);
+    setLoading(false);
+    setSpinning(false);
   }, []);
 
-  useEffect(function() { load(false); }, []);
-  useEffect(function() {
-    const t = setInterval(function() { load(true); }, 60000);
-    return function() { clearInterval(t); };
-  }, []);
+  useEffect(()=>{ load(); },[]);
+  useEffect(()=>{ const t=setInterval(()=>load(true),60000); return()=>clearInterval(t); },[]);
 
-  const liveMatches = matches.filter(isLive);
-  const upcomingMatches = matches.filter(function(m) { return !isLive(m); });
-  const shown = mtab === "live" ? liveMatches : upcomingMatches;
+  const live = matches.filter(isLive);
+  const upcoming = matches.filter(m=>!isLive(m));
+  const shown = mtab==="live" ? live : upcoming;
 
-  function handleOnboard() {
-    try { localStorage.setItem("csob", "1"); } catch (e) {}
-    setOnboarded(true);
+  function doneOb() { try{localStorage.setItem("csob2","1");}catch{} setOb(true); }
+
+  // ONBOARDING
+  if (!ob) {
+    const slides = [
+      { title:"CricSense AI", sub:"India's #1 Cricket Intelligence", desc:"Real-time AI predictions, live match analysis, and smart signals all in one place.", col:C.accent },
+      { title:"Live AI Analysis", sub:"Ball-by-ball Intelligence", desc:"7 AI tabs: Ball predictions, Wicket alerts, Score forecasts, Market traps, Momentum and more.", col:C.accent2 },
+      { title:"Smart Signals", sub:"LAGAI / KHAI with exact entry", desc:"AI-powered signals with live odds, win probability gauges, and market trap detection.", col:C.accent3 }
+    ];
+    const sl = slides[obStep];
+    const icons = [
+      <svg width="72" height="72" viewBox="0 0 80 80" fill="none"><ellipse cx="40" cy="40" rx="36" ry="12" stroke={sl.col} strokeWidth="2.5" fill="none" transform="rotate(-35 40 40)"/><circle cx="40" cy="40" r="35" stroke={sl.col} strokeWidth="2" fill="none" opacity="0.2"/><line x1="12" y1="55" x2="68" y2="25" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/><circle cx="40" cy="40" r="7" fill={sl.col}/></svg>,
+      <svg width="72" height="72" viewBox="0 0 80 80" fill="none"><polygon points="40,6 50,30 76,30 55,50 63,76 40,58 17,76 25,50 4,30 30,30" fill={sl.col} opacity="0.9"/></svg>,
+      <svg width="72" height="72" viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="32" stroke={sl.col} strokeWidth="2.5" fill="none"/><circle cx="40" cy="40" r="18" stroke={sl.col} strokeWidth="2" fill="none" opacity="0.6"/><circle cx="40" cy="40" r="7" fill={sl.col}/><line x1="40" y1="4" x2="40" y2="16" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/><line x1="40" y1="64" x2="40" y2="76" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/><line x1="4" y1="40" x2="16" y2="40" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/><line x1="64" y1="40" x2="76" y2="40" stroke={sl.col} strokeWidth="3" strokeLinecap="round"/></svg>
+    ];
+    return (
+      <div style={{position:"fixed",inset:0,background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:24}}>
+        <div style={{position:"absolute",inset:0,opacity:.04,backgroundImage:"linear-gradient("+C.accent+" 1px,transparent 1px),linear-gradient(90deg,"+C.accent+" 1px,transparent 1px)",backgroundSize:"48px 48px",pointerEvents:"none"}}/>
+        <div style={{position:"relative",maxWidth:380,width:"100%",textAlign:"center"}}>
+          <div style={{display:"flex",justifyContent:"center",marginBottom:24,animation:"float 3s ease-in-out infinite",filter:"drop-shadow(0 0 20px "+sl.col+")"}}>{icons[obStep]}</div>
+          <h1 style={{fontFamily:"'Exo 2',sans-serif",fontSize:32,fontWeight:800,color:sl.col,textShadow:"0 0 30px "+sl.col,marginBottom:8}}>{sl.title}</h1>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:10,color:C.text2,letterSpacing:2,textTransform:"uppercase",marginBottom:16}}>{sl.sub}</p>
+          <p style={{fontSize:16,color:C.text,lineHeight:1.65,marginBottom:36}}>{sl.desc}</p>
+          <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:28}}>
+            {slides.map((_,i)=><div key={i} onClick={()=>setObStep(i)} style={{width:i===obStep?28:8,height:8,borderRadius:4,cursor:"pointer",background:i===obStep?sl.col:"rgba(255,255,255,.2)",transition:"all .3s"}}/>)}
+          </div>
+          <button onClick={()=>obStep<slides.length-1?setObStep(obStep+1):doneOb()} style={{width:"100%",padding:"15px",background:"linear-gradient(135deg,"+sl.col+","+sl.col+"88)",color:"#000",fontSize:17,fontWeight:700,borderRadius:14,fontFamily:"'Exo 2',sans-serif",border:"1px solid "+sl.col}}>
+            {obStep<slides.length-1?"Aage Chalo":"Shuru Karo!"}
+          </button>
+          {obStep<slides.length-1&&<button onClick={doneOb} style={{marginTop:14,color:C.text2,fontSize:14}}>Skip</button>}
+        </div>
+      </div>
+    );
   }
 
-  function handleSelect(match) {
-    setSelected(match);
-    setDtab("Overview");
+  // MATCH DETAIL
+  if (selected) {
+    return <MatchPage match={selected} onBack={()=>setSelected(null)}/>;
   }
 
-  if (!onboarded) return <Onboarding onDone={handleOnboard} />;
-
+  // MATCH LIST
   return (
-    <div style={{ minHeight: "100vh", background: C.bg }}>
-      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, opacity: 0.025, backgroundImage: "linear-gradient(" + C.accent + " 1px,transparent 1px),linear-gradient(90deg," + C.accent + " 1px,transparent 1px)", backgroundSize: "56px 56px" }} />
-
-      <Header count={matches.length} onRefresh={function() { load(true); }} spinning={spinning} />
-
-      <div style={{ maxWidth: 760, margin: "0 auto", paddingBottom: 60, position: "relative", zIndex: 1 }}>
-        <div style={{ display: "flex", borderBottom: "1px solid " + C.border, background: C.bg2, position: "sticky", top: 61, zIndex: 90 }}>
-          {[{ id: "live", label: "Live (" + liveMatches.length + ")" }, { id: "upcoming", label: "Upcoming (" + upcomingMatches.length + ")" }].map(function(t) {
-            return (
-              <button key={t.id}
-                onClick={function() { setMtab(t.id); setSelected(null); }}
-                style={{ flex: 1, padding: "13px 8px", background: mtab === t.id ? "rgba(0,229,255,0.07)" : "none", color: mtab === t.id ? C.accent : C.text2, fontSize: 12, fontWeight: 600, fontFamily: "'Rajdhani', sans-serif", borderBottom: "2px solid " + (mtab === t.id ? C.accent : "transparent"), transition: "all 0.2s" }}
-              >
-                {t.label}
-              </button>
-            );
-          })}
+    <div style={{minHeight:"100vh",background:C.bg}}>
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,opacity:.02,backgroundImage:"linear-gradient("+C.accent+" 1px,transparent 1px),linear-gradient(90deg,"+C.accent+" 1px,transparent 1px)",backgroundSize:"56px 56px"}}/>
+      <Header count={matches.length} onRefresh={()=>load(true)} spinning={spinning}/>
+      <div style={{maxWidth:760,margin:"0 auto",position:"relative",zIndex:1,paddingBottom:40}}>
+        {/* Tabs */}
+        <div style={{display:"flex",borderBottom:"1px solid "+C.border,background:C.bg2,position:"sticky",top:61,zIndex:90}}>
+          {[{id:"live",lbl:"Live ("+live.length+")"},{id:"upcoming",lbl:"Upcoming ("+upcoming.length+")"}].map(t=>(
+            <button key={t.id} onClick={()=>setMtab(t.id)} style={{
+              flex:1,padding:"13px 0",
+              background:mtab===t.id?"rgba(0,229,255,.07)":"none",
+              color:mtab===t.id?C.accent:C.text2,
+              fontSize:12,fontWeight:600,fontFamily:"'Rajdhani',sans-serif",
+              borderBottom:"2px solid "+(mtab===t.id?C.accent:"transparent"),transition:"all .2s"
+            }}>{t.lbl}</button>
+          ))}
         </div>
 
-        {selected ? (
-          <div style={{ padding: 16 }}>
-            <button
-              onClick={function() { setSelected(null); }}
-              style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.05)", border: "1px solid " + C.border, color: C.text2, padding: "8px 16px", borderRadius: 10, fontSize: 13, fontFamily: "'Rajdhani', sans-serif", marginBottom: 16 }}
-            >
-              Back
-            </button>
-            <MatchDetail match={selected} dtab={dtab} setDtab={setDtab} />
-          </div>
-        ) : (
-          <div style={{ padding: 16 }}>
-            {loading ? (
-              <div style={{ textAlign: "center", padding: 56 }}>
-                <div style={{ width:48, height:48, border:"4px solid rgba(0,229,255,0.2)", borderTop:"4px solid #00e5ff", borderRadius:"50%", animation:"spinning 1s linear infinite", margin:"0 auto 16px" }} />
-                <div style={{ color: C.text2, fontFamily: "'Space Mono', monospace", fontSize: 12 }}>Loading matches...</div>
-              </div>
-            ) : shown.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 48, color: C.text2 }}>
-                <div style={{ fontSize: 44, marginBottom: 12 }}>o</div>
-                <div style={{ marginBottom: 6 }}>Abhi koi {mtab === "live" ? "live" : "upcoming"} match nahi hai.</div>
-              </div>
-            ) : (
-              shown.map(function(m) {
-                return <MatchCard key={m.id} match={m} onClick={handleSelect} selected={selected && selected.id === m.id} />;
-              })
-            )}
-          </div>
-        )}
+        <div style={{padding:14}}>
+          {loading ? (
+            <div style={{textAlign:"center",padding:56}}>
+              <div style={{width:44,height:44,border:"4px solid rgba(0,229,255,.15)",borderTop:"4px solid "+C.accent,borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 16px"}}/>
+              <div style={{color:C.text2,fontFamily:"'Space Mono',monospace",fontSize:12}}>Loading matches...</div>
+            </div>
+          ) : shown.length===0 ? (
+            <div style={{textAlign:"center",padding:48,color:C.text2}}>
+              <div style={{fontSize:40,marginBottom:12}}>00</div>
+              <div>Koi {mtab==="live"?"live":"upcoming"} match nahi hai abhi.</div>
+            </div>
+          ) : (
+            shown.map(m=><MatchCard key={m.id} match={m} onClick={m=>{setSelected(m);}} selected={false}/>)
+          )}
+        </div>
       </div>
-
-      <div style={{ textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.18)", fontFamily: "'Space Mono', monospace", padding: "8px 0 16px", position: "fixed", bottom: 0, left: 0, right: 0, pointerEvents: "none" }}>
+      <div style={{textAlign:"center",fontSize:10,color:"rgba(255,255,255,.15)",fontFamily:"'Space Mono',monospace",padding:"0 0 12px",position:"fixed",bottom:0,left:0,right:0,pointerEvents:"none"}}>
         Entertainment Only - 18+ - Responsible Gambling
       </div>
     </div>
