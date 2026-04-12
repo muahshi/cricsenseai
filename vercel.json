@@ -1,16 +1,10 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "functions": {
-    "api/**/*.js": { "runtime": "nodejs18.x" }
-  },
+  "version": 2,
+  "buildCommand": null,
+  "outputDirectory": null,
+  "installCommand": "npm install",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "crons": [
-    { "path": "/api/cron/daily",    "schedule": "30 3 * * *" },
-    { "path": "/api/cron/prematch", "schedule": "*/30 * * * *" },
-    { "path": "/api/cron/results",  "schedule": "0 * * * *" }
   ]
 }
