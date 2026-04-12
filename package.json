@@ -1,0 +1,12 @@
+{
+  "name": "cricsense-ai",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0"
+  }
+}
